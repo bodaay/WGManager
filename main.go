@@ -35,5 +35,9 @@ func main() {
 			panic(err)
 		}
 	}
+	err := wgconfig.GenerateClients()
+	if err != nil {
+		panic(err)
+	}
 
 }

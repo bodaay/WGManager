@@ -13,7 +13,7 @@ const DefaultJSONFileString = `{
 	"APITLSCert":"/etc/ssl/wgman.cert",
 	"APITLSKey":"/etc/ssl/wgman.key",
 	"APIAllowedIPSCIDR":["0.0.0.0/32"],
-	"ClientDBPath":"/home/ubuntu/wgman/",
+	"ClientDBPath":"wgman",
 	"InstancesConfigPath":"/etc/wireguard/",
 	"WGInstances":[],
 	"WGInstancesCIDR":"172.27.32.0/20",
@@ -41,28 +41,30 @@ type WGConfig struct {
 
 //WGInstanceConfig Per Instance Configuration
 type WGInstanceConfig struct {
-	InstanceNameReadOnly         string   `json:"InstanceNameReadOnly"`
-	InstanceServerIPCIDRReadOnly string   `json:"InstanceServerIPCIDRReadOnly"`
-	InstanceServerPortReadOnly   uint16   `json:"InstanceServerPortReadOnly"`
-	ClientInstanceDNSServers     []string `json:"ClientInstanceDNSServers"`
-	InstanceFireWallPostUP       string   `json:"InstanceFireWallPostUP"`
-	InstanceFireWallPostDown     string   `json:"InstanceFireWallPostDown"`
-	InstancePubKey               string   `json:"InstancePubKey"`
-	InstancePriKey               string   `json:"InstancePriKey"`
-	ClientKeepAlive              uint64   `json:"ClientKeepAlive"`
-	ClientAllowedIPsCIDR         []string `json:"ClientAllowedIPsCIDR"`
-	ClientsIP                    []string `json:"-"`
+	InstanceNameReadOnly         string     `json:"InstanceNameReadOnly"`
+	InstanceServerIPCIDRReadOnly string     `json:"InstanceServerIPCIDRReadOnly"`
+	InstanceServerPortReadOnly   uint16     `json:"InstanceServerPortReadOnly"`
+	ClientInstanceDNSServers     []string   `json:"ClientInstanceDNSServers"`
+	InstanceFireWallPostUP       string     `json:"InstanceFireWallPostUP"`
+	InstanceFireWallPostDown     string     `json:"InstanceFireWallPostDown"`
+	InstancePubKey               string     `json:"InstancePubKey"`
+	InstancePriKey               string     `json:"InstancePriKey"`
+	ClientKeepAlive              uint64     `json:"ClientKeepAlive"`
+	ClientAllowedIPsCIDR         []string   `json:"ClientAllowedIPsCIDR"`
+	ClientsIP                    []string   `json:"-"`
+	WGDB                         wgdb       `json:"-"`
+	WGClients                    []WGClient `json:"-"`
 }
 
 type WGClient struct {
-	ClientIPCIDR       string
-	ClientPubKey       string
-	ClientPriKey       string
-	IsAllocated        bool
-	ClientUUID         string
-	InsertedTimestamp  string
-	AllocatedTimestamp string
-	RevokedTimestamp   string
+	ClientIPCIDR       string `json:"ClientIPCIDR"`
+	ClientPubKey       string `json:"ClientPubKey"`
+	ClientPriKey       string `json:"ClientPriKey"`
+	IsAllocated        bool   `json:"IsAllocated"`
+	ClientUUID         string `json:"ClientUUID"`
+	InsertedTimestamp  string `json:"InsertedTimestamp"`
+	AllocatedTimestamp string `json:"AllocatedTimestamp"`
+	RevokedTimestamp   string `json:"RevokedTimestamp"`
 }
 
 //ParseConfigFile Parse Config File by specified path

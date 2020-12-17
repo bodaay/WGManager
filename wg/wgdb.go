@@ -1,7 +1,8 @@
 package wg
 
 import (
-	"fmt"
+	"encoding/json"
+	"log"
 	"os"
 
 	"github.com/tidwall/buntdb"
@@ -12,7 +13,7 @@ type wgdb struct {
 	DB       *buntdb.DB
 }
 
-func (db *wgdb) openDB(dbpath string) error {
+func (wdb *wgdb) openDB(dbpath string) error {
 	InitIndexes := true
 	if _, err := os.Stat(dbpath); os.IsNotExist(err) {
 		InitIndexes = false
@@ -22,41 +23,60 @@ func (db *wgdb) openDB(dbpath string) error {
 		return err
 	}
 	if InitIndexes {
-		db.CreateIndex("ages", "user:*:age", buntdb.IndexInt)
+		// ddb.CreateIndex("ClientIPCIDR", "*", buntdb.IndexString)
 	}
-	db.filepath = dbpath
-	db.DB = ddb
+	wdb.filepath = dbpath
+	wdb.DB = ddb
 	return nil
 }
-func (db *wgdb) GetClient(key string) (string, error) {
-	err := db.View(func(tx *buntdb.Tx) error {
-		tx.Ascend("ages", func(key, val string) bool {
-			fmt.Printf(buf, "%s %s\n", key, val)
+
+//GetClient TODO: fix this gay shit
+func (wdb *wgdb) GetClient(clientIPCIDR string) (*WGClient, error) {
+	var wgc WGClient
+	var found bool
+	err := wdb.DB.View(func(tx *buntdb.Tx) error {
+		err := tx.Ascend("", func(key, value string) bool {
+			jerr := json.Unmarshal([]byte(value), &wgc)
+			if jerr != nil {
+				log.Println(jerr)
+				return false
+			}
+			if wgc.ClientIPCIDR == clientIPCIDR {
+				found = true
+				return false //value found, stop accending
+			}
 			return true
 		})
-		return nil
+		return err
 	})
-	return nil
+	if err != nil || !found {
+		return nil, err
+	}
+	return &wgc, nil
 }
 
-func (db *wgdb) UpdateClient(key string) (string, error) {
-	err := db.View(func(tx *buntdb.Tx) error {
-
-		return nil
+func (wdb *wgdb) InsertUpdateClient(client *WGClient) error {
+	//marsh the client
+	jsondata, err := json.MarshalIndent(client, "", "  ")
+	if err != nil {
+		return err
+	}
+	err = wdb.DB.Update(func(tx *buntdb.Tx) error {
+		_, _, err := tx.Set(client.ClientIPCIDR, string(jsondata), nil)
+		return err
 	})
+	if err != nil {
+		return err
+	}
 	return nil
 }
-func (db *wgdb) InsertClient(key string) (string, error) {
-	err := db.View(func(tx *buntdb.Tx) error {
+func (wdb *wgdb) DeleteClient(client *WGClient) error {
+	err := wdb.DB.View(func(tx *buntdb.Tx) error {
 
 		return nil
 	})
-	return nil
-}
-func (db *wgdb) DeleteClient(key string) (string, error) {
-	err := db.View(func(tx *buntdb.Tx) error {
-
-		return nil
-	})
+	if err != nil {
+		return err
+	}
 	return nil
 }
