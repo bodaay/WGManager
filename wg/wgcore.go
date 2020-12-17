@@ -2,8 +2,14 @@ package wg
 
 import (
 	"WGManager/utils"
+	"errors"
 	"fmt"
+	"io/ioutil"
+	"log"
+	"os"
 	"path"
+	"strings"
+	"time"
 )
 
 /*
@@ -63,60 +69,195 @@ func (w *WGConfig) InitiateConfig(UseNAT bool, NATApaterName string, MaxInstance
 //GenerateAllClients Generate The Clients for first time
 func (w *WGConfig) GenerateAllClients() error {
 	for _, instance := range w.WGInstances {
+		instance.GenerateNewClients(w.ClientDBPath)
+	}
+	return nil
+}
 
-		dbFileName := fmt.Sprintf("%s.buntdb", instance.InstanceNameReadOnly)
-		dbFileNameAndPath := path.Join(w.ClientDBPath, dbFileName)
-		err := utils.CreateFolderIfNotExists(w.ClientDBPath)
+//GenerateAllClients Generate The Clients for first time
+func (w *WGConfig) ApplyAllConfigs() error {
+	for _, instance := range w.WGInstances {
+		instance.Apply(w.InstancesConfigPath)
+	}
+	return nil
+}
+func (wi *WGInstanceConfig) Save(dbPath string) error {
+	return nil
+}
+func (wi *WGInstanceConfig) Load(dbPath string) error {
+	return nil
+}
+func (wi *WGInstanceConfig) Apply(confpath string) error {
+	confFileName := fmt.Sprintf("%s.conf", wi.InstanceNameReadOnly)
+	confFileNameAndPath := path.Join(confpath, confFileName)
+	err := utils.CreateFolderIfNotExists(confpath)
+	if err != nil {
+		return err
+	}
+	var sb strings.Builder
+	sb.WriteString("[interface]\n")
+	sb.WriteString(fmt.Sprintf("PrivateKey = %s\n", wi.InstancePriKey))
+	sb.WriteString(fmt.Sprintf("Address = %s\n", wi.InstanceServerIPCIDRReadOnly))
+	sb.WriteString(fmt.Sprintf("ListenPort = %d\n", wi.InstanceServerPortReadOnly))
+	sb.WriteString(fmt.Sprintf("PostUp = %s\n", wi.InstanceFireWallPostUP))
+	sb.WriteString(fmt.Sprintf("PostDown = %s\n", wi.InstanceFireWallPostDown))
+	tempDNSLine := ""
+	if len(wi.ClientInstanceDNSServers) > 0 {
+		for _, d := range wi.ClientInstanceDNSServers {
+			tempDNSLine += d
+			tempDNSLine += ","
+		}
+		tempDNSLine = tempDNSLine[:len(tempDNSLine)-1]
+		sb.WriteString(fmt.Sprintf("DNS = %s\n", tempDNSLine))
+	}
+	sb.WriteString("\n")
+	sb.WriteString("\n")
+	log.Printf("2-Total Generated for interface: %s is %d", wi.InstanceNameReadOnly, len(wi.WGClients))
+	for _, wc := range wi.WGClients {
+		sb.WriteString("[Peer]\n")
+		sb.WriteString(fmt.Sprintf("# ClientUUID: %s, IsAllocated: %t, Allocated Data:%s\n", wc.ClientUUID, wc.IsAllocated, wc.AllocatedTimestamp))
+		sb.WriteString(fmt.Sprintf("PublicKey = %s\n", wc.ClientPubKey))
+		tempAIPSLine := ""
+		if len(wi.ClientAllowedIPsCIDR) > 0 {
+			for _, d := range wi.ClientAllowedIPsCIDR {
+				tempAIPSLine += d
+				tempAIPSLine += ","
+			}
+			tempAIPSLine = tempAIPSLine[:len(tempAIPSLine)-1]
+			sb.WriteString(fmt.Sprintf("AllowedIPs = %s\n", tempAIPSLine))
+		}
+		sb.WriteString("\n")
+		sb.WriteString("\n")
+	}
+	err = ioutil.WriteFile(confFileNameAndPath, []byte(sb.String()), os.ModePerm)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+//GenerateNewClients Generate The Clients for first time
+func (wi *WGInstanceConfig) GenerateNewClients(dbPath string) error {
+
+	dbFileName := fmt.Sprintf("%s.buntdb", wi.InstanceNameReadOnly)
+	dbFileNameAndPath := path.Join(dbPath, dbFileName)
+	err := utils.CreateFolderIfNotExists(dbPath)
+	if err != nil {
+		return err
+	}
+	var wgdb wgdb
+	err = wgdb.openDB(dbFileNameAndPath)
+	if err != nil {
+		return err
+	}
+	for _, c := range wi.ClientsIP {
+		pkey, err := newPrivateKey()
 		if err != nil {
 			return err
 		}
-		var wgdb wgdb
-		err = wgdb.openDB(dbFileNameAndPath)
-		if err != nil {
-			return err
+		wc := &WGClient{
+			ClientIPCIDR:       c,
+			GeneratedTimestamp: time.Now().Format(utils.MyTimeFormatWithoutTimeZone),
+			IsAllocated:        false,
+			ClientPubKey:       pkey.Public().String(),
+			ClientPriKey:       pkey.String(),
 		}
-		for _, c := range instance.ClientsIP {
+		// err = wgdb.InsertUpdateClient(wc)
+		// if err != nil {
+		// 	return err
+		// }
+		wi.WGClients = append(wi.WGClients, *wc)
+	}
+	log.Printf("1-Total Generated for interface: %s is %d", wi.InstanceNameReadOnly, len(wi.WGClients))
+	return nil
+
+}
+
+func (wi *WGInstanceConfig) FindClientBYIPCIDR(IPCIDR string) (*WGClient, error) {
+	for _, wc := range wi.WGClients {
+		if wc.ClientIPCIDR == IPCIDR {
+			return &wc, nil
+		}
+	}
+	return nil, errors.New("Client Not Found")
+}
+
+func (wi *WGInstanceConfig) AllocateClient(ClientUUID string) error {
+	foundAvailable := false
+	//Check if he has been asigned an IP before
+	for _, wc := range wi.WGClients {
+		if wc.ClientUUID == ClientUUID {
+			return fmt.Errorf("ClientUUID Exists to Another IP CIDDR: %s\tinstance name: %s", wc.ClientIPCIDR, wi.InstanceNameReadOnly)
+		}
+
+	}
+	for _, wc := range wi.WGClients {
+		if !wc.IsAllocated {
+			wc.ClientUUID = ClientUUID
+			wc.IsAllocated = true
+			wc.AllocatedTimestamp = time.Now().Format(utils.MyTimeFormatWithoutTimeZone)
+			foundAvailable = true
+		}
+	}
+	if !foundAvailable {
+		return fmt.Errorf("No Free IPs Available in instance: %s", wi.InstanceNameReadOnly)
+	}
+	return nil
+}
+func (wi *WGInstanceConfig) RevokeClientByUUID(ClientUUID string) error {
+	for _, wc := range wi.WGClients {
+		if wc.ClientUUID == ClientUUID {
+			wc.ClientUUID = ""
+			wc.ClientIPCIDR = ""
+			wc.IsAllocated = false
+			//we  have to change the keys
 			pkey, err := newPrivateKey()
 			if err != nil {
 				return err
 			}
-
-			wc := &WGClient{
-				ClientIPCIDR:      c,
-				InsertedTimestamp: "",
-				ClientPubKey:      pkey.Public().String(),
-				ClientPriKey:      pkey.String(),
-			}
-			err = wgdb.InsertUpdateClient(wc)
-			if err != nil {
-				return err
-			}
+			wc.ClientPubKey = pkey.Public().String()
+			wc.ClientPriKey = pkey.String()
+			wc.RevokedTimestamp = time.Now().Format(utils.MyTimeFormatWithoutTimeZone)
+			return nil
 		}
-
-		// dbClient, _ := wgdb.GetClient("172.27.32.8/32")
-		// if dbClient != nil {
-		// 	log.Println(dbClient)
-		// }
-
 	}
 	return nil
 }
-func (w *WGConfig) LoadClients() error {
-	for _, instance := range w.WGInstances {
-		dbFileName := fmt.Sprintf("%s.buntdb", instance.InstanceNameReadOnly)
-		dbFileNameAndPath := path.Join(w.ClientDBPath, dbFileName)
-		err := utils.CreateFolderIfNotExists(w.ClientDBPath)
-		if err != nil {
-			return err
+func (wi *WGInstanceConfig) RevokeClientByIPCIDR(IPCIDR string) error {
+	for _, wc := range wi.WGClients {
+		if wc.ClientIPCIDR == wc.ClientIPCIDR {
+			wc.ClientUUID = ""
+			wc.ClientIPCIDR = ""
+			wc.IsAllocated = false
+			//we  have to change the keys
+			pkey, err := newPrivateKey()
+			if err != nil {
+				return err
+			}
+			wc.ClientPubKey = pkey.Public().String()
+			wc.ClientPriKey = pkey.String()
+			wc.RevokedTimestamp = time.Now().Format(utils.MyTimeFormatWithoutTimeZone)
 		}
-		var wgdb wgdb
-		err = wgdb.openDB(dbFileNameAndPath)
-		if err != nil {
-			return err
-		}
-
 	}
+	return nil
 }
-func WriteServiceConfigFiles(instance *WGInstanceConfig, clientDBPath string) error {
 
-}
+// func (w *WGConfig) LoadClients() error {
+// 	for _, instance := range w.WGInstances {
+// 		dbFileName := fmt.Sprintf("%s.buntdb", instance.InstanceNameReadOnly)
+// 		dbFileNameAndPath := path.Join(w.ClientDBPath, dbFileName)
+// 		err := utils.CreateFolderIfNotExists(w.ClientDBPath)
+// 		if err != nil {
+// 			return err
+// 		}
+// 		var wgdb wgdb
+// 		err = wgdb.openDB(dbFileNameAndPath)
+// 		if err != nil {
+// 			return err
+// 		}
+
+// 	}
+// }
+// func WriteServiceConfigFiles(instance *WGInstanceConfig, clientDBPath string) error {
+
+// }

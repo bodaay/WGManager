@@ -13,8 +13,8 @@ const DefaultJSONFileString = `{
 	"APITLSCert":"/etc/ssl/wgman.cert",
 	"APITLSKey":"/etc/ssl/wgman.key",
 	"APIAllowedIPSCIDR":["0.0.0.0/32"],
-	"ClientDBPath":"wgman",
-	"InstancesConfigPath":"/etc/wireguard/",
+	"ClientDBPath":"testclient",
+	"InstancesConfigPath":"testconf",
 	"WGInstances":[],
 	"WGInstancesCIDR":"172.27.32.0/20",
 	"WGInstancesStartPort": 22200,
@@ -41,19 +41,19 @@ type WGConfig struct {
 
 //WGInstanceConfig Per Instance Configuration
 type WGInstanceConfig struct {
-	InstanceNameReadOnly         string     `json:"InstanceNameReadOnly"`
-	InstanceServerIPCIDRReadOnly string     `json:"InstanceServerIPCIDRReadOnly"`
-	InstanceServerPortReadOnly   uint16     `json:"InstanceServerPortReadOnly"`
-	ClientInstanceDNSServers     []string   `json:"ClientInstanceDNSServers"`
-	InstanceFireWallPostUP       string     `json:"InstanceFireWallPostUP"`
-	InstanceFireWallPostDown     string     `json:"InstanceFireWallPostDown"`
-	InstancePubKey               string     `json:"InstancePubKey"`
-	InstancePriKey               string     `json:"InstancePriKey"`
-	ClientKeepAlive              uint64     `json:"ClientKeepAlive"`
-	ClientAllowedIPsCIDR         []string   `json:"ClientAllowedIPsCIDR"`
-	ClientsIP                    []string   `json:"-"`
-	WGDB                         wgdb       `json:"-"`
-	WGClients                    []WGClient `json:"-"`
+	InstanceNameReadOnly         string   `json:"InstanceNameReadOnly"`
+	InstanceServerIPCIDRReadOnly string   `json:"InstanceServerIPCIDRReadOnly"`
+	InstanceServerPortReadOnly   uint16   `json:"InstanceServerPortReadOnly"`
+	ClientInstanceDNSServers     []string `json:"ClientInstanceDNSServers"`
+	InstanceFireWallPostUP       string   `json:"InstanceFireWallPostUP"`
+	InstanceFireWallPostDown     string   `json:"InstanceFireWallPostDown"`
+	InstancePubKey               string   `json:"InstancePubKey"`
+	InstancePriKey               string   `json:"InstancePriKey"`
+	ClientKeepAlive              uint64   `json:"ClientKeepAlive"`
+	ClientAllowedIPsCIDR         []string `json:"ClientAllowedIPsCIDR"`
+	ClientsIP                    []string `json:"-"`
+	// WGDB                         wgdb       `json:"-"`
+	WGClients []WGClient `json:"-"`
 }
 
 type WGClient struct {
@@ -62,7 +62,7 @@ type WGClient struct {
 	ClientPriKey       string `json:"ClientPriKey"`
 	IsAllocated        bool   `json:"IsAllocated"`
 	ClientUUID         string `json:"ClientUUID"`
-	InsertedTimestamp  string `json:"InsertedTimestamp"`
+	GeneratedTimestamp string `json:"GeneratedTimestamp"`
 	AllocatedTimestamp string `json:"AllocatedTimestamp"`
 	RevokedTimestamp   string `json:"RevokedTimestamp"`
 }

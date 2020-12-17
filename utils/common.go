@@ -23,6 +23,9 @@ import (
 	"github.com/google/uuid"
 )
 
+const MyTimeFormatWithTimeZone = "2006-01-02T15-04-05 -0700"
+const MyTimeFormatWithoutTimeZone = "2006-01-02T15-04-05"
+
 //FileExists just a simple boolean file exists function
 func FileExists(filename string) bool {
 	info, err := os.Stat(filename)
