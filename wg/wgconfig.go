@@ -16,7 +16,7 @@ const DefaultJSONFileString = `{
 	"ClientDBPath":"testclient",
 	"InstancesConfigPath":"testconf",
 	"WGInstances":[],
-	"WGInstancesCIDR":"172.27.32.0/20",
+	"WGInstancesCIDR":"172.27.32.0/16",
 	"WGInstancesStartPort": 22200,
 	"WGGlobalEndPointHostName": "wg.MyWireGuard.org",
 	"LimitMaxInstances":0
@@ -53,7 +53,7 @@ type WGInstanceConfig struct {
 	ClientAllowedIPsCIDR         []string `json:"ClientAllowedIPsCIDR"`
 	ClientsIP                    []string `json:"-"`
 	// WGDB                         wgdb       `json:"-"`
-	WGClients []WGClient `json:"-"`
+	WGClients []WGClient `json:"WGClients"`
 }
 
 type WGClient struct {

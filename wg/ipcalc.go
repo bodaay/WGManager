@@ -33,8 +33,10 @@ func GenerateHostsAndClients(cidr string) ([]HostAndClients, error) {
 			hclients = append(hclients, hc)
 			hindex++
 		} else {
-			if hindex > -1 && ip[3] != 255 {
+			if hindex > -1 && ip[3] != 255 && ip[3] > 1 { //skip 0,1 and skip last one
 				hclients[hindex].HostClients = append(hclients[hindex].HostClients, fmt.Sprintf("%s/32", ip.String()))
+
+				// fmt.Println(fmt.Sprintf("%s/32", ip.String()))
 			}
 
 		}

@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"path"
 	"strings"
@@ -58,7 +57,11 @@ func (w *WGConfig) InitiateConfig(UseNAT bool, NATApaterName string, MaxInstance
 		}
 		wgInstance.InstancePubKey = pkey.Public().String()
 		wgInstance.InstancePriKey = pkey.String()
-		wgInstance.ClientsIP = host.HostClients
+
+		// for _, cip := range host.HostClients {
+		// 	wgInstance.ClientsIP = append(wgInstance.ClientsIP, cip)
+		// }
+		// wgInstance.WGClients = make([]WGClient, 0)
 		w.WGInstances = append(w.WGInstances, wgInstance)
 
 	}
@@ -68,17 +71,21 @@ func (w *WGConfig) InitiateConfig(UseNAT bool, NATApaterName string, MaxInstance
 
 //GenerateAllClients Generate The Clients for first time
 func (w *WGConfig) GenerateAllClients() error {
-	for _, instance := range w.WGInstances {
-		instance.GenerateNewClients(w.ClientDBPath)
+	for k := range w.WGInstances {
+		w.WGInstances[k].GenerateNewClients(w.ClientDBPath)
+		// log.Printf("1-Total Generated for interface: %s is %d", w.WGInstances[k].InstanceNameReadOnly, len(w.WGInstances[k].WGClients))
 	}
 	return nil
 }
 
 //GenerateAllClients Generate The Clients for first time
 func (w *WGConfig) ApplyAllConfigs() error {
-	for _, instance := range w.WGInstances {
-		instance.Apply(w.InstancesConfigPath)
+	// log.Printf("2-Total Generated for interface: %s is %d", w.WGInstances[0].InstanceNameReadOnly, len(w.WGInstances[0].WGClients))
+	for k := range w.WGInstances {
+		w.WGInstances[k].Apply(w.InstancesConfigPath)
+		// log.Printf("2-Total Generated for interface: %s is %d", w.WGInstances[k].InstanceNameReadOnly, len(w.WGInstances[k].WGClients))
 	}
+
 	return nil
 }
 func (wi *WGInstanceConfig) Save(dbPath string) error {
@@ -112,10 +119,10 @@ func (wi *WGInstanceConfig) Apply(confpath string) error {
 	}
 	sb.WriteString("\n")
 	sb.WriteString("\n")
-	log.Printf("2-Total Generated for interface: %s is %d", wi.InstanceNameReadOnly, len(wi.WGClients))
+
 	for _, wc := range wi.WGClients {
 		sb.WriteString("[Peer]\n")
-		sb.WriteString(fmt.Sprintf("# ClientUUID: %s, IsAllocated: %t, Allocated Data:%s\n", wc.ClientUUID, wc.IsAllocated, wc.AllocatedTimestamp))
+		sb.WriteString(fmt.Sprintf("# ClientUUID: %s, IsAllocated: %t, Allocated Timestamp:%s\n", wc.ClientUUID, wc.IsAllocated, wc.AllocatedTimestamp))
 		sb.WriteString(fmt.Sprintf("PublicKey = %s\n", wc.ClientPubKey))
 		tempAIPSLine := ""
 		if len(wi.ClientAllowedIPsCIDR) > 0 {
@@ -139,23 +146,23 @@ func (wi *WGInstanceConfig) Apply(confpath string) error {
 //GenerateNewClients Generate The Clients for first time
 func (wi *WGInstanceConfig) GenerateNewClients(dbPath string) error {
 
-	dbFileName := fmt.Sprintf("%s.buntdb", wi.InstanceNameReadOnly)
-	dbFileNameAndPath := path.Join(dbPath, dbFileName)
-	err := utils.CreateFolderIfNotExists(dbPath)
-	if err != nil {
-		return err
-	}
-	var wgdb wgdb
-	err = wgdb.openDB(dbFileNameAndPath)
-	if err != nil {
-		return err
-	}
+	// dbFileName := fmt.Sprintf("%s.buntdb", wi.InstanceNameReadOnly)
+	// dbFileNameAndPath := path.Join(dbPath, dbFileName)
+	// err := utils.CreateFolderIfNotExists(dbPath)
+	// if err != nil {
+	// 	return err
+	// }
+	// var wgdb wgdb
+	// err = wgdb.openDB(dbFileNameAndPath)
+	// if err != nil {
+	// 	return err
+	// }
 	for _, c := range wi.ClientsIP {
 		pkey, err := newPrivateKey()
 		if err != nil {
 			return err
 		}
-		wc := &WGClient{
+		wc := WGClient{
 			ClientIPCIDR:       c,
 			GeneratedTimestamp: time.Now().Format(utils.MyTimeFormatWithoutTimeZone),
 			IsAllocated:        false,
@@ -166,9 +173,9 @@ func (wi *WGInstanceConfig) GenerateNewClients(dbPath string) error {
 		// if err != nil {
 		// 	return err
 		// }
-		wi.WGClients = append(wi.WGClients, *wc)
+		wi.WGClients = append(wi.WGClients, wc)
 	}
-	log.Printf("1-Total Generated for interface: %s is %d", wi.InstanceNameReadOnly, len(wi.WGClients))
+
 	return nil
 
 }

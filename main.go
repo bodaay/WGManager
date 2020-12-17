@@ -3,6 +3,7 @@ package main
 import (
 	"WGManager/utils"
 	"WGManager/wg"
+	"log"
 	"os"
 )
 
@@ -35,11 +36,17 @@ func main() {
 			panic(err)
 		}
 	}
+	log.Println(wgconfig)
 	err := wgconfig.GenerateAllClients()
 	if err != nil {
 		panic(err)
 	}
+	log.Println(wgconfig)
 	err = wgconfig.ApplyAllConfigs()
+	if err != nil {
+		panic(err)
+	}
+	err = wgconfig.SaveConfigFile(defaultConfigPath)
 	if err != nil {
 		panic(err)
 	}
