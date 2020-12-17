@@ -1,21 +1,21 @@
-package main
+package wg
 
-const defaultJSONFileString = `{
+import (
+	"encoding/json"
+	"io/ioutil"
+	"os"
+)
+
+const DefaultJSONFileString = `{
 	"APIListenAddress":"0.0.0.0",
-	"APIListenPort":"6969",
+	"APIListenPort":6969,
 	"APIUseTLS":true,
 	"APITLSCert":"/etc/ssl/wgman.cert",
 	"APITLSKey":"/etc/ssl/wgman.key",
 	"APIAllowedIPSCIDR":["0.0.0.0/32"],
 	"ClientDBPath":"/home/ubuntu/wgman/",
 	"InstancesConfigPath":"/etc/wireguard/",
-	"WGInstances":[
-		"ClientInstanceDNSServers"			:["1.1.1.1","8.8.8.8"]
-		"InstanceFireWallPostUP"			:""
-		"InstanceFireWallPostDown"			:""
-		"ClientKeepAlive"					:10
-		"ClientAllowedIPsCIDR"				:["0.0.0.0/0"]
-	],
+	"WGInstances":[],
 	"WGInstancesCIDR":"172.27.32.0/20",
 	"WGInstancesStartPort": 22200,
 	"WGGlobalEndPointHostName": "wg.MyWireGuard.org",
@@ -41,22 +41,62 @@ type WGConfig struct {
 
 //WGInstanceConfig Per Instance Configuration
 type WGInstanceConfig struct {
-	instanceName             string
-	instanceServerIP         string
-	instanceServerPort       string
-	ClientInstanceDNSServers []string `json:"ClientInstanceDNS"`
-	InstanceFireWallPostUP   string   `json:"InstanceFireWallPostUP"`
-	InstanceFireWallPostDown string   `json:"InstanceFireWallPostDown"`
-	ClientKeepAlive          uint64   `json:"ClientKeepAlive"`
-	ClientAllowedIPsCIDR     []string `json:"ClientAllowedIPsCIDR"`
+	InstanceNameReadOnly         string   `json:"InstanceNameReadOnly"`
+	InstanceServerIPCIDRReadOnly string   `json:"InstanceServerIPCIDRReadOnly"`
+	InstanceServerPortReadOnly   uint16   `json:"InstanceServerPortReadOnly"`
+	ClientInstanceDNSServers     []string `json:"ClientInstanceDNSServers"`
+	InstanceFireWallPostUP       string   `json:"InstanceFireWallPostUP"`
+	InstanceFireWallPostDown     string   `json:"InstanceFireWallPostDown"`
+	InstancePubKey               string   `json:"InstancePubKey"`
+	InstancePriKey               string   `json:"InstancePriKey"`
+	ClientKeepAlive              uint64   `json:"ClientKeepAlive"`
+	ClientAllowedIPsCIDR         []string `json:"ClientAllowedIPsCIDR"`
+	ClientsIP                    []string `json:"-"`
+}
+
+type WGClient struct {
+	ClientIPCIDR       string
+	ClientPubKey       string
+	ClientPriKey       string
+	IsAllocated        bool
+	ClientUUID         string
+	InsertedTimestamp  string
+	AllocatedTimestamp string
+	RevokedTimestamp   string
 }
 
 //ParseConfigFile Parse Config File by specified path
 func (w *WGConfig) ParseConfigFile(configpath string) error {
+	data, err := ioutil.ReadFile(configpath)
+	if err != nil {
+		return err
+	}
+	err = w.ParseConfig(string(data))
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
 //ParseConfig Parse Config string
 func (w *WGConfig) ParseConfig(configstring string) error {
+	err := json.Unmarshal([]byte(configstring), w)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+//SaveConfigFile Save the file into the specified path
+func (w *WGConfig) SaveConfigFile(configpath string) error {
+	jsondata, err := json.MarshalIndent(w, "", "  ")
+	if err != nil {
+		return err
+	}
+	err = ioutil.WriteFile(configpath, jsondata, os.ModePerm)
+	if err != nil {
+		return err
+	}
 	return nil
 }
