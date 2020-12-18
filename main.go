@@ -1,53 +1,48 @@
 package main
 
 import (
-	"WGManager/utils"
 	"WGManager/wg"
 	"log"
 	"os"
 )
 
 func main() {
-	var wgconfig wg.WGConfig
-	defaultConfigPath := "wgmanconfig.json"
-
-	UseNAT := false
-	NATAdapterName := "eno1"
-	MaxInstances := 0
+	defaultConfigFilePath := "wgmanconfig.json"
 	if len(os.Args) > 1 {
-		defaultConfigPath = os.Args[1]
+		defaultConfigFilePath = os.Args[1]
 	}
-	if !utils.FileExists(defaultConfigPath) {
-		err := wgconfig.ParseConfig(wg.DefaultJSONFileString)
+	//Load the config file
+	var wgc wg.WGConfig
+	err := wgc.ParseConfigFile(defaultConfigFilePath)
+	if err != nil {
+		newconfig, err := wgc.CreateDefaultconfig(defaultConfigFilePath)
 		if err != nil {
 			panic(err)
 		}
-		err = wgconfig.InitiateConfig(UseNAT, NATAdapterName, uint16(MaxInstances))
-		if err != nil {
-			panic(err)
-		}
-		err = wgconfig.SaveConfigFile(defaultConfigPath)
+		wgc = *newconfig
+	}
+	//Search the path for instances configuration files
+	err = wgc.LoadInstancesFiles()
+	if err != nil {
+		panic(err)
+	}
+	wgi, err := wgc.FindInstanceByIPAndPort("172.27.40.0/22", 22201)
+	if err != nil {
+		panic(err)
+	}
+	if wgi == nil {
+		err = wgc.CreateNewInstance("172.27.40.0/22", 22201, []string{"1.1.1.1", "8.8.8.8"}, true, "eno1", 0)
 		if err != nil {
 			panic(err)
 		}
 	} else {
-		err := wgconfig.ParseConfigFile(defaultConfigPath)
-		if err != nil {
-			panic(err)
-		}
+		log.Println("Instance already exist for the ip")
 	}
-	log.Println(wgconfig)
-	err := wgconfig.GenerateAllClients()
+	err = wgc.DeployAllInstances()
 	if err != nil {
 		panic(err)
 	}
-	log.Println(wgconfig)
-	err = wgconfig.ApplyAllConfigs()
-	if err != nil {
-		panic(err)
-	}
-	err = wgconfig.SaveConfigFile(defaultConfigPath)
-	if err != nil {
-		panic(err)
-	}
+	// for _, i := range wgc.WGInstances {
+	// 	log.Println(i.WGClients[0])
+	// }
 }

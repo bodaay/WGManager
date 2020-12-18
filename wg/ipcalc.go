@@ -2,47 +2,22 @@ package wg
 
 //source: https://gist.github.com/kotakanbe/d3059af990252ba89a82
 import (
-	"fmt"
-	"log"
 	"net"
 )
 
-type HostAndClients struct {
-	HostIP      string
-	HostClients []string
-}
-
-//GenerateHostsAndClients Please this function is shit, don't read it
-func GenerateHostsAndClients(cidr string) ([]HostAndClients, error) {
+//GenerateHostsForCIDR Generate All possible hosts for a given cidr
+func GenerateHostsForCIDR(cidr string) ([]string, error) {
 	ip, ipnet, err := net.ParseCIDR(cidr)
 	if err != nil {
-		log.Println(cidr)
 		return nil, err
 	}
-	var hclients []HostAndClients
+
 	var ips []string
-	var ipsNotString []net.IP
-	var hc HostAndClients
-	hindex := -1
 	for ip := ip.Mask(ipnet.Mask); ipnet.Contains(ip); inc(ip) {
 		ips = append(ips, ip.String())
-		ipsNotString = append(ipsNotString, ip)
-		if ip[3] == 1 {
-			hc = HostAndClients{}
-			hc.HostIP = fmt.Sprintf("%s/24", ip.String())
-			hclients = append(hclients, hc)
-			hindex++
-		} else {
-			if hindex > -1 && ip[3] != 255 && ip[3] > 1 { //skip 0,1 and skip last one
-				hclients[hindex].HostClients = append(hclients[hindex].HostClients, fmt.Sprintf("%s/32", ip.String()))
-
-				// fmt.Println(fmt.Sprintf("%s/32", ip.String()))
-			}
-
-		}
 	}
-
-	return hclients, nil
+	// remove network address and broadcast address
+	return ips[1 : len(ips)-1], nil
 }
 
 //  http://play.golang.org/p/m8TNTtygK0

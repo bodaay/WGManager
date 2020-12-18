@@ -46,6 +46,17 @@ func CreateFolderIfNotExists(foldername string) error {
 	return nil
 }
 
+// CreateFolderIfNotExists Create folder if not exists, reutrn error if could not create for any reason
+func CreateFolderAllIfNotExists(foldername string) error {
+	if _, err := os.Stat(foldername); os.IsNotExist(err) {
+		err = os.MkdirAll(foldername, os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // GetFileNameWithoutPath Return the file without path
 func GetFileNameWithoutPath(filename string) string {
 	return filepath.Base(filename)
