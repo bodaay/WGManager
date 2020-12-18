@@ -1,6 +1,7 @@
 package wg
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -33,7 +34,10 @@ PersistentKeepalive = 10
 
 */
 
-func (wg *WGClient) CreateClientConfigString(serverAddress string, serverPubKey string, DNSServers []string, AllowedIPs []string, Endpoint string, KeepAlive uint16) string {
+func (wg *WGClient) CreateClientConfigString(serverAddress string, serverPubKey string, DNSServers []string, AllowedIPs []string, Endpoint string, KeepAlive uint16) (string, error) {
+	if !wg.IsAllocated {
+		return "", errors.New("Client is not allocated, sorry")
+	}
 	var sb strings.Builder
 	//server config is actually the client interface itself
 	sb.WriteString("[interface]\n")
@@ -62,7 +66,7 @@ func (wg *WGClient) CreateClientConfigString(serverAddress string, serverPubKey 
 		sb.WriteString(fmt.Sprintf("AllowedIPs = %s\n", tempAIPSLine))
 	}
 	sb.WriteString(fmt.Sprintf("PersistentKeepalive = %d\n", KeepAlive))
-	return sb.String()
+	return sb.String(), nil
 }
 
 func (wg *WGClient) CreateClientConfigQRCodePicture(content string, filepath string) error {
