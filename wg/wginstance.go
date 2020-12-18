@@ -14,20 +14,22 @@ import (
 )
 
 type WGInstanceConfig struct {
-	InstanceNameReadOnly         string   `json:"instance_name_read_only"`
-	InstanceServerIPCIDRReadOnly string   `json:"instance_server_ipcidr_read_only"`
-	InstanceServerPortReadOnly   uint16   `json:"instance_server_port_read_only"`
-	InstanceEndPointHostname     string   `json:"instance_end_point_hostname"`
-	ClientInstanceDNSServers     []string `json:"client_instance_dns_servers"`
-	InstanceFireWallPostUP       string   `json:"instance_fire_wall_post_up"`
-	InstanceFireWallPostDown     string   `json:"instance_fire_wall_post_down"`
-	InstancePubKey               string   `json:"instance_pub_key"`
-	InstancePriKey               string   `json:"instance_pri_key"`
-	ClientKeepAlive              uint64   `json:"client_keep_alive"`
-	ClientAllowedIPsCIDR         []string `json:"client_allowed_i_ps_cidr"`
-	MaxClientsPerInstance        uint64   `json:"max_clients_per_instance"`
-
-	WGClients []*WGClient `json:"WGClients"`
+	InstanceNameReadOnly         string      `json:"instance_name_read_only"`
+	InstanceServerIPCIDRReadOnly string      `json:"instance_server_ipcidr_read_only"`
+	InstanceServerPortReadOnly   uint16      `json:"instance_server_port_read_only"`
+	InstanceEndPointHostname     string      `json:"instance_end_point_hostname"`
+	ClientInstanceDNSServers     []string    `json:"client_instance_dns_servers"`
+	InstanceFireWallPostUP       string      `json:"instance_fire_wall_post_up"`
+	InstanceFireWallPostDown     string      `json:"instance_fire_wall_post_down"`
+	InstancePubKey               string      `json:"instance_pub_key"`
+	InstancePriKey               string      `json:"instance_pri_key"`
+	ClientKeepAlive              uint64      `json:"client_keep_alive"`
+	ClientAllowedIPsCIDR         []string    `json:"client_allowed_i_ps_cidr"`
+	MaxClientsPerInstance        uint64      `json:"max_clients_per_instance"`
+	WGClients                    []*WGClient `json:"WGClients"`
+	//Added by imran
+	InstanceUseNAT       bool   `json:"InstanceUseNAT"`
+	InstanceEthernetName string `json:"InstanceEthernetName"`
 }
 
 func (wi *WGInstanceConfig) Save(instancePath string) error {
@@ -47,6 +49,13 @@ func (wi *WGInstanceConfig) Load(instancePath string) error {
 		return err
 	}
 	err = json.Unmarshal(fdata, &wi)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func (wi *WGInstanceConfig) Remove(instancePath string) error {
+	err := os.Remove(instancePath)
 	if err != nil {
 		return err
 	}
@@ -146,7 +155,7 @@ func (wi *WGInstanceConfig) FindClientBYIPCIDR(IPCIDR string) (*WGClient, error)
 	return nil, errors.New("Client Not Found")
 }
 
-func (wi *WGInstanceConfig) AllocateClient(ClientUUID string) error {
+func (wi *WGInstanceConfig) AllocateClient(ClientUUID string, instancePath string, wgconfigPath string) error {
 	foundAvailable := false
 	//Check if he has been asigned an IP before
 	for _, wc := range wi.WGClients {
@@ -161,14 +170,19 @@ func (wi *WGInstanceConfig) AllocateClient(ClientUUID string) error {
 			wc.IsAllocated = true
 			wc.AllocatedTimestamp = time.Now().Format(utils.MyTimeFormatWithoutTimeZone)
 			foundAvailable = true
+			break
 		}
 	}
 	if !foundAvailable {
 		return fmt.Errorf("No Free IPs Available in instance: %s", wi.InstanceNameReadOnly)
 	}
+	instanceFileName := fmt.Sprintf("%s.json", wi.InstanceNameReadOnly)
+	finalFileNameAndPath := path.Join(instancePath, instanceFileName)
+	wi.Save(finalFileNameAndPath)
+	wi.Deploy(wgconfigPath)
 	return nil
 }
-func (wi *WGInstanceConfig) RevokeClientByUUID(ClientUUID string) error {
+func (wi *WGInstanceConfig) RevokeClientByUUID(ClientUUID string, instancePath string, wgconfigPath string) error {
 	for _, wc := range wi.WGClients {
 		if wc.ClientUUID == ClientUUID {
 			wc.ClientUUID = ""
@@ -182,9 +196,13 @@ func (wi *WGInstanceConfig) RevokeClientByUUID(ClientUUID string) error {
 			wc.ClientPubKey = pkey.Public().String()
 			wc.ClientPriKey = pkey.String()
 			wc.RevokedTimestamp = time.Now().Format(utils.MyTimeFormatWithoutTimeZone)
-			return nil
+			break
 		}
 	}
+	instanceFileName := fmt.Sprintf("%s.json", wi.InstanceNameReadOnly)
+	finalFileNameAndPath := path.Join(instancePath, instanceFileName)
+	wi.Save(finalFileNameAndPath)
+	wi.Deploy(wgconfigPath)
 	return nil
 }
 func (wi *WGInstanceConfig) RevokeClientByIPCIDR(IPCIDR string) error {

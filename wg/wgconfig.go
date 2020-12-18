@@ -10,10 +10,13 @@ import (
 	"os"
 	"path"
 	"runtime"
+	"sync"
 )
 
 const defaultAPIListenAdderss = "0.0.0.0"
 const defaultAPIListenPort = 6969
+const defaultAdminAPIListenAdderss = "127.0.0.1"
+const defaultAdminAPIListenPort = 1129
 const defaultAPIUseTLS = false
 const defaultAPICertFile = "/etc/ssl/wgman/wgman.cert"
 const defaultAPIKeyFile = "/etc/ssl/wgman/wgman.key"
@@ -27,8 +30,11 @@ const defaultInstanceConfigPath = "wginstance"
 
 //WGConfig Global Configuration For WGManager
 type WGConfig struct {
+	sync.Mutex
 	APIListenAddress           string              `json:"api_listen_address"`
 	APIListenPort              uint16              `json:"api_listen_port"`
+	AdminAPIListenAddress      string              `json:"admin_api_listen_address"`
+	AdminAPIListenPort         uint16              `json:"admin_api_listen_port"`
 	APIUseTLS                  bool                `json:"api_use_tls"`
 	APITLSCert                 string              `json:"apitls_cert"`
 	APITLSKey                  string              `json:"apitls_key"`
@@ -45,6 +51,8 @@ func (w *WGConfig) CreateDefaultconfig(configpath string) (*WGConfig, error) {
 	var wgdefault WGConfig
 	wgdefault.APIListenAddress = defaultAPIListenAdderss
 	wgdefault.APIListenPort = defaultAPIListenPort
+	wgdefault.AdminAPIListenAddress = defaultAdminAPIListenAdderss
+	wgdefault.AdminAPIListenPort = defaultAdminAPIListenPort
 	wgdefault.APIUseTLS = defaultAPIUseTLS
 	wgdefault.APITLSCert = defaultAPICertFile
 	wgdefault.APITLSKey = defaultAPIKeyFile
@@ -107,6 +115,33 @@ func (w *WGConfig) LoadInstancesFiles() error {
 	return nil
 }
 
+func (w *WGConfig) AllocateClient(instanceName string, clientuuid string) error {
+	wi, err := w.FindInstanceByName(instanceName)
+	if err != nil {
+		return fmt.Errorf("instance name not found: %s", instanceName)
+	}
+	w.Lock()
+	defer w.Unlock()
+	err = wi.AllocateClient(clientuuid, w.InstancesConfigPath, w.WGInsatncesServiceFilePath)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (w *WGConfig) RevokeClient(instanceName string, clientuuid string) error {
+	wi, err := w.FindInstanceByName(instanceName)
+	if err != nil {
+		return fmt.Errorf("instance name not found: %s", instanceName)
+	}
+	w.Lock()
+	defer w.Unlock()
+	err = wi.RevokeClientByUUID(clientuuid, w.InstancesConfigPath, w.WGInsatncesServiceFilePath)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 func (w *WGConfig) DeployAllInstances() error {
 	for _, wi := range w.WGInstances {
 		err := w.DeployInstanceByName(wi.InstanceNameReadOnly)
@@ -120,9 +155,28 @@ func (w *WGConfig) DeployAllInstances() error {
 func (w *WGConfig) DeployInstanceByName(instanceName string) error {
 	wi, err := w.FindInstanceByName(instanceName)
 	if err != nil {
-		return err
+		return fmt.Errorf("instance name not found: %s", instanceName)
 	}
 	err = wi.Deploy(w.WGInsatncesServiceFilePath)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func (w *WGConfig) RemoveInstanceByName(instanceName string) error {
+	wi, err := w.FindInstanceByName(instanceName)
+	if err != nil {
+		return fmt.Errorf("instance name not found: %s", instanceName)
+	}
+	w.Lock()
+	defer w.Unlock()
+	finalFileNameAndPath := path.Join(w.InstancesConfigPath, wi.InstanceNameReadOnly+".json")
+	err = wi.Remove(finalFileNameAndPath)
+	for i, v := range w.WGInstances {
+		if v == wi {
+			w.WGInstances = append(w.WGInstances[:i], w.WGInstances[i+1:]...)
+		}
+	}
 	if err != nil {
 		return err
 	}
@@ -166,10 +220,14 @@ func (w *WGConfig) SaveConfigFile(configpath string) error {
 }
 
 func (w *WGConfig) CreateNewInstance(instanceCIDR string, instancePort uint16, instanceDNS []string, UseNAT bool, EthernetAdapaterName string, MaxClients uint64) error {
+
 	var wgInstance WGInstanceConfig
-
+	_, err := w.FindInstanceByIPAndPort(instanceCIDR, instancePort)
+	if err != nil {
+		return err
+	}
 	wgInstance.InstanceNameReadOnly = fmt.Sprintf("wg%02d", len(w.WGInstances)+1)
-
+	wgInstance.MaxClientsPerInstance = MaxClients
 	wgInstance.InstanceServerPortReadOnly = instancePort
 	wgInstance.ClientInstanceDNSServers = instanceDNS
 	if UseNAT {
@@ -202,6 +260,8 @@ func (w *WGConfig) CreateNewInstance(instanceCIDR string, instancePort uint16, i
 	}
 	instanceFileName := fmt.Sprintf("%s.json", wgInstance.InstanceNameReadOnly)
 	finalFileNameAndPath := path.Join(w.InstancesConfigPath, instanceFileName)
+	w.Lock()
+	defer w.Unlock()
 	err = wgInstance.Save(finalFileNameAndPath)
 	if err != nil {
 		return err

@@ -1,6 +1,8 @@
 {
   "api_listen_address": "0.0.0.0",
   "api_listen_port": 6969,
+  "admin_api_listen_address": "127.0.0.1",
+  "admin_api_listen_port": 1129,
   "api_use_tls": false,
   "apitls_cert": "/etc/ssl/wgman/wgman.cert",
   "apitls_key": "/etc/ssl/wgman/wgman.key",

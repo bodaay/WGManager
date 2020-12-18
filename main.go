@@ -1,8 +1,8 @@
 package main
 
 import (
+	"WGManager/webapi"
 	"WGManager/wg"
-	"log"
 	"os"
 )
 
@@ -26,23 +26,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	wgi, err := wgc.FindInstanceByIPAndPort("172.27.40.0/22", 22201)
-	if err != nil {
-		panic(err)
-	}
-	if wgi == nil {
-		err = wgc.CreateNewInstance("172.27.40.0/22", 22201, []string{"1.1.1.1", "8.8.8.8"}, true, "eno1", 0)
-		if err != nil {
-			panic(err)
-		}
-	} else {
-		log.Println("Instance already exist for the ip")
-	}
-	err = wgc.DeployAllInstances()
-	if err != nil {
-		panic(err)
-	}
-	// for _, i := range wgc.WGInstances {
-	// 	log.Println(i.WGClients[0])
-	// }
+	go webapi.StartClient(&wgc)
+	webapi.StartAdminClient(&wgc)
 }
