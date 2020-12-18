@@ -66,15 +66,7 @@ func (wi *WGInstanceConfig) Deploy(confpath string) error {
 	sb.WriteString(fmt.Sprintf("ListenPort = %d\n", wi.InstanceServerPortReadOnly))
 	sb.WriteString(fmt.Sprintf("PostUp = %s\n", wi.InstanceFireWallPostUP))
 	sb.WriteString(fmt.Sprintf("PostDown = %s\n", wi.InstanceFireWallPostDown))
-	tempDNSLine := ""
-	if len(wi.ClientInstanceDNSServers) > 0 {
-		for _, d := range wi.ClientInstanceDNSServers {
-			tempDNSLine += d
-			tempDNSLine += ","
-		}
-		tempDNSLine = tempDNSLine[:len(tempDNSLine)-1]
-		sb.WriteString(fmt.Sprintf("DNS = %s\n", tempDNSLine))
-	}
+
 	sb.WriteString("\n")
 	sb.WriteString("\n")
 
@@ -111,7 +103,7 @@ func (wi *WGInstanceConfig) GenerateServerAndClients(ipcidr string) error {
 	if err != nil {
 		return err
 	}
-	
+
 	counter := 0
 	for _, c := range possibleHosts {
 		if counter == 0 { //skip first ip
