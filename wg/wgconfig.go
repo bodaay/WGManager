@@ -268,7 +268,7 @@ func (w *WGConfig) CreateNewInstance(instanceCIDR string, instancePort uint16, i
 		wgInstance.InstanceFireWallPostDown = fmt.Sprintf("iptables -D FORWARD -i %s -j ACCEPT; iptables -t nat -D POSTROUTING -o %s -j MASQUERADE", wgInstance.InstanceNameReadOnly, EthernetAdapaterName)
 	} else {
 		wgInstance.InstanceFireWallPostUP = fmt.Sprintf("iptables -A FORWARD -i %s -j ACCEPT", wgInstance.InstanceNameReadOnly)
-		wgInstance.InstanceFireWallPostDown = fmt.Sprintf("iptables -A FORWARD -i %s -j ACCEPT", wgInstance.InstanceNameReadOnly)
+		wgInstance.InstanceFireWallPostDown = fmt.Sprintf("iptables -D FORWARD -i %s -j ACCEPT", wgInstance.InstanceNameReadOnly)
 	}
 	wgInstance.ClientKeepAlive = 10
 	wgInstance.ClientAllowedIPsCIDR = []string{"0.0.0.0/0"}
