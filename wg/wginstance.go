@@ -155,12 +155,13 @@ func (wi *WGInstanceConfig) findClientBYIPCIDR(IPCIDR string) (*WGClient, error)
 	return nil, errors.New("Client Not Found")
 }
 
-func (wi *WGInstanceConfig) allocateClient(ClientUUID string, instancePath string, wgconfigPath string) error {
+func (wi *WGInstanceConfig) allocateClient(ClientUUID string, instancePath string, wgconfigPath string) (*WGClient, error) {
 	foundAvailable := false
+	allocatedWC := &WGClient{}
 	//Check if he has been asigned an IP before
 	for _, wc := range wi.WGClients {
 		if wc.ClientUUID == ClientUUID {
-			return fmt.Errorf("ClientUUID Exists to Another IP CIDDR: %s\tinstance name: %s", wc.ClientIPCIDR, wi.InstanceNameReadOnly)
+			return nil, fmt.Errorf("ClientUUID Exists to Another IP CIDDR: %s\tinstance name: %s", wc.ClientIPCIDR, wi.InstanceNameReadOnly)
 		}
 
 	}
@@ -170,23 +171,25 @@ func (wi *WGInstanceConfig) allocateClient(ClientUUID string, instancePath strin
 			wc.IsAllocated = true
 			wc.AllocatedTimestamp = time.Now().Format(utils.MyTimeFormatWithoutTimeZone)
 			foundAvailable = true
+			allocatedWC = wc
 			break
 		}
 	}
 	if !foundAvailable {
-		return fmt.Errorf("No Free IPs Available in instance: %s", wi.InstanceNameReadOnly)
+		return nil, fmt.Errorf("No Free IPs Available in instance: %s", wi.InstanceNameReadOnly)
 	}
 	instanceFileName := fmt.Sprintf("%s.json", wi.InstanceNameReadOnly)
 	finalFileNameAndPath := path.Join(instancePath, instanceFileName)
 	err := wi.save(finalFileNameAndPath)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	err = wi.deploy(wgconfigPath)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+
+	return allocatedWC, nil
 }
 func (wi *WGInstanceConfig) revokeClientByUUID(ClientUUID string, instancePath string, wgconfigPath string) error {
 	for _, wc := range wi.WGClients {

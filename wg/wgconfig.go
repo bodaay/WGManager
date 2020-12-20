@@ -58,6 +58,7 @@ func (w *WGConfig) CreateDefaultconfig(configpath string) (*WGConfig, error) {
 	wgdefault.APITLSKey = defaultAPIKeyFile
 	wgdefault.APIAllowedIPS = defaultAllowedIPsCIDR
 	wgdefault.InstancesConfigPath = defaultInstanceConfigPath
+
 	if runtime.GOOS == "windows" {
 		wgdefault.WGInsatncesServiceFilePath = "etc/wireguard/"
 	} else {
@@ -115,18 +116,29 @@ func (w *WGConfig) LoadInstancesFiles() error {
 	return nil
 }
 
-func (w *WGConfig) AllocateClient(instanceName string, clientuuid string) error {
+func (w *WGConfig) AllocateClient(instanceName string, clientuuid string) ([]byte, error) {
 	wi, err := w.FindInstanceByName(instanceName)
 	if err != nil {
-		return fmt.Errorf("instance name not found: %s", instanceName)
+		return nil, fmt.Errorf("instance name not found: %s", instanceName)
 	}
 	w.Lock()
 	defer w.Unlock()
-	err = wi.allocateClient(clientuuid, w.InstancesConfigPath, w.WGInsatncesServiceFilePath)
+	wc, err := wi.allocateClient(clientuuid, w.InstancesConfigPath, w.WGInsatncesServiceFilePath)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	if wc != nil {
+		qrcontent, err := wc.createClientConfigString(wi.InstanceServerIPCIDRReadOnly, wi.InstancePubKey, wi.ClientInstanceDNSServers, wi.ClientAllowedIPsCIDR, wi.InstanceEndPointHostname, uint16(wi.ClientKeepAlive), wi.InstanceServerPortReadOnly)
+		if err != nil {
+			return nil, err
+		}
+		qrbytes, err := wc.createClientConfigQRCode(qrcontent)
+		if err != nil {
+			return nil, err
+		}
+		return qrbytes, nil
+	}
+	return nil, errors.New("Client Allocaiton failed")
 }
 
 func (w *WGConfig) RevokeClient(instanceName string, clientuuid string) error {
@@ -244,6 +256,7 @@ func (w *WGConfig) CreateNewInstance(instanceCIDR string, instancePort uint16, i
 	if err != nil {
 		return err
 	}
+	wgInstance.InstanceEndPointHostname = defaultInstanceEndPointHostName
 	wgInstance.InstancePubKey = pkey.Public().String()
 	wgInstance.InstancePriKey = pkey.String()
 	err = wgInstance.generateServerAndClients(instanceCIDR) //// wgInstance.InstanceServerIPCIDRReadOnly will be set using this function,

@@ -3,6 +3,7 @@ package webapi
 import (
 	"WGManager/webapi/resource"
 	"WGManager/wg"
+	"bytes"
 	"mime"
 	"net/http"
 	"strconv"
@@ -51,15 +52,14 @@ func postAllocateClient(e *echo.Echo, wgConfig *wg.WGConfig) {
 		if err := c.Bind(u); err != nil {
 			c.String(http.StatusBadRequest, err.Error())
 		}
-		err := wgConfig.AllocateClient(u.Instancename, u.Clientuuid)
+		qrbytes, err := wgConfig.AllocateClient(u.Instancename, u.Clientuuid)
 		responseObj := "Allocation Successfull"
 		if err != nil {
 			responseObj = err.Error()
 			return c.JSONPretty(http.StatusBadRequest, responseObj, "  ")
-
 		}
-
-		return c.JSONPretty(http.StatusOK, responseObj, "  ")
+		return c.Stream(http.StatusOK, "image/jpeg", bytes.NewReader(qrbytes))
+		//return c.JSONPretty(http.StatusOK, responseObj, "  ")
 	})
 }
 

@@ -34,7 +34,7 @@ PersistentKeepalive = 10
 
 */
 
-func (wg *WGClient) createClientConfigString(serverAddress string, serverPubKey string, DNSServers []string, AllowedIPs []string, Endpoint string, KeepAlive uint16) (string, error) {
+func (wg *WGClient) createClientConfigString(serverAddress string, serverPubKey string, DNSServers []string, AllowedIPs []string, Endpoint string, KeepAlive uint16, instancePort uint16) (string, error) {
 	if !wg.IsAllocated {
 		return "", errors.New("Client is not allocated, sorry")
 	}
@@ -55,7 +55,7 @@ func (wg *WGClient) createClientConfigString(serverAddress string, serverPubKey 
 	//peer config is the wg instance
 	sb.WriteString("[Peer]\n")
 	sb.WriteString(fmt.Sprintf("PublicKey = %s\n", serverPubKey))
-	sb.WriteString(fmt.Sprintf("Endpoint = %s\n", Endpoint))
+	sb.WriteString(fmt.Sprintf("Endpoint = %s:%d\n", Endpoint, instancePort))
 	tempAIPSLine := ""
 	if len(AllowedIPs) > 0 {
 		for _, d := range AllowedIPs {
