@@ -1,7 +1,7 @@
 {
   "api_listen_address": "0.0.0.0",
   "api_listen_port": 6969,
-  "admin_api_listen_address": "127.0.0.1",
+  "admin_api_listen_address": "0.0.0.0",
   "admin_api_listen_port": 1129,
   "api_use_tls": false,
   "apitls_cert": "/etc/ssl/wgman/wgman.cert",
@@ -10,6 +10,6 @@
     "0.0.0.0/32"
   ],
   "instances_config_path": "wginstance",
-  "wg_insatnces_service_file_path": "etc/wireguard/",
+  "wg_insatnces_service_file_path": "/etc/wireguard/",
   "wg_instances": null
 }

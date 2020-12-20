@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net"
 	"os"
 	"path"
@@ -15,7 +16,7 @@ import (
 
 const defaultAPIListenAdderss = "0.0.0.0"
 const defaultAPIListenPort = 6969
-const defaultAdminAPIListenAdderss = "127.0.0.1"
+const defaultAdminAPIListenAdderss = "0.0.0.0"
 const defaultAdminAPIListenPort = 1129
 const defaultAPIUseTLS = false
 const defaultAPICertFile = "/etc/ssl/wgman/wgman.cert"
@@ -25,7 +26,7 @@ var defaultAllowedIPsCIDR = []string{"0.0.0.0/32"}
 
 const defaultFirstInstanceCIDR = "172.27.36.0/22"
 const defaultFirstInstancePort = 22200
-const defaultInstanceEndPointHostName = "wg.mywireguard.com"
+const defaultInstanceEndPointHostName = "165.22.30.240"
 const defaultInstanceConfigPath = "wginstance"
 
 //WGConfig Global Configuration For WGManager
@@ -152,6 +153,12 @@ func (w *WGConfig) RevokeClient(instanceName string, clientuuid string) error {
 	if err != nil {
 		return err
 	}
+	output, err := restartWGInstance(instanceName)
+	if err != nil {
+		return err
+	}
+	log.Println(output)
+
 	return nil
 }
 func (w *WGConfig) DeployAllInstances() error {
@@ -169,10 +176,17 @@ func (w *WGConfig) DeployInstanceByName(instanceName string) error {
 	if err != nil {
 		return fmt.Errorf("instance name not found: %s", instanceName)
 	}
+	w.Lock()
+	defer w.Unlock()
 	err = wi.deploy(w.WGInsatncesServiceFilePath)
 	if err != nil {
 		return err
 	}
+	output, err := restartWGInstance(instanceName)
+	if err != nil {
+		return err
+	}
+	log.Println(output)
 	return nil
 }
 func (w *WGConfig) RemoveInstanceByName(instanceName string) error {
@@ -183,7 +197,14 @@ func (w *WGConfig) RemoveInstanceByName(instanceName string) error {
 	w.Lock()
 	defer w.Unlock()
 	finalFileNameAndPath := path.Join(w.InstancesConfigPath, wi.InstanceNameReadOnly+".json")
-	err = wi.remove(finalFileNameAndPath)
+	output, err := stopWGInstance(instanceName)
+	if err != nil {
+		return err
+	}
+	log.Println(output)
+	confFilePath := path.Join(w.WGInsatncesServiceFilePath, fmt.Sprintf("%s.conf", instanceName))
+
+	err = wi.remove(confFilePath, finalFileNameAndPath)
 	for i, v := range w.WGInstances {
 		if v == wi {
 			w.WGInstances = append(w.WGInstances[:i], w.WGInstances[i+1:]...)
@@ -243,8 +264,8 @@ func (w *WGConfig) CreateNewInstance(instanceCIDR string, instancePort uint16, i
 	wgInstance.InstanceServerPortReadOnly = instancePort
 	wgInstance.ClientInstanceDNSServers = instanceDNS
 	if UseNAT {
-		wgInstance.InstanceFireWallPostUP = fmt.Sprintf("iptables -A FORWARD -i %s -j ACCEPT; iptables -A FORWARD -o %s -j ACCEPT; iptables -t nat -A POSTROUTING -o %s -j MASQUERADE", wgInstance.InstanceNameReadOnly, wgInstance.InstanceNameReadOnly, EthernetAdapaterName)
-		wgInstance.InstanceFireWallPostDown = fmt.Sprintf("iptables -A FORWARD -i %s -j ACCEPT; iptables -A FORWARD -o %s -j ACCEPT; iptables -t nat -A POSTROUTING -o %s -j MASQUERADE", wgInstance.InstanceNameReadOnly, wgInstance.InstanceNameReadOnly, EthernetAdapaterName)
+		wgInstance.InstanceFireWallPostUP = fmt.Sprintf("iptables -A FORWARD -i %s -j ACCEPT; iptables -t nat -A POSTROUTING -o %s -j MASQUERADE", wgInstance.InstanceNameReadOnly, EthernetAdapaterName)
+		wgInstance.InstanceFireWallPostDown = fmt.Sprintf("iptables -D FORWARD -i %s -j ACCEPT; iptables -t nat -D POSTROUTING -o %s -j MASQUERADE", wgInstance.InstanceNameReadOnly, EthernetAdapaterName)
 	} else {
 		wgInstance.InstanceFireWallPostUP = fmt.Sprintf("iptables -A FORWARD -i %s -j ACCEPT", wgInstance.InstanceNameReadOnly)
 		wgInstance.InstanceFireWallPostDown = fmt.Sprintf("iptables -A FORWARD -i %s -j ACCEPT", wgInstance.InstanceNameReadOnly)

@@ -54,8 +54,12 @@ func (wi *WGInstanceConfig) load(instancePath string) error {
 	}
 	return nil
 }
-func (wi *WGInstanceConfig) remove(instancePath string) error {
-	err := os.Remove(instancePath)
+func (wi *WGInstanceConfig) remove(confFilePath string, instancePath string) error {
+	err := os.Remove(confFilePath)
+	if err != nil {
+		return err
+	}
+	err = os.Remove(instancePath)
 	if err != nil {
 		return err
 	}
@@ -70,9 +74,9 @@ func (wi *WGInstanceConfig) deploy(confpath string) error {
 	}
 	var sb strings.Builder
 	sb.WriteString("[interface]\n")
-	sb.WriteString(fmt.Sprintf("PrivateKey = %s\n", wi.InstancePriKey))
 	sb.WriteString(fmt.Sprintf("Address = %s\n", wi.InstanceServerIPCIDRReadOnly))
 	sb.WriteString(fmt.Sprintf("ListenPort = %d\n", wi.InstanceServerPortReadOnly))
+	sb.WriteString(fmt.Sprintf("PrivateKey = %s\n", wi.InstancePriKey))
 	sb.WriteString(fmt.Sprintf("PostUp = %s\n", wi.InstanceFireWallPostUP))
 	sb.WriteString(fmt.Sprintf("PostDown = %s\n", wi.InstanceFireWallPostDown))
 
@@ -83,15 +87,16 @@ func (wi *WGInstanceConfig) deploy(confpath string) error {
 		sb.WriteString("[Peer]\n")
 		sb.WriteString(fmt.Sprintf("# ClientUUID: %s, IsAllocated: %t, Allocated Timestamp:%s\n", wc.ClientUUID, wc.IsAllocated, wc.AllocatedTimestamp))
 		sb.WriteString(fmt.Sprintf("PublicKey = %s\n", wc.ClientPubKey))
-		tempAIPSLine := ""
-		if len(wi.ClientAllowedIPsCIDR) > 0 {
-			for _, d := range wi.ClientAllowedIPsCIDR {
-				tempAIPSLine += d
-				tempAIPSLine += ","
-			}
-			tempAIPSLine = tempAIPSLine[:len(tempAIPSLine)-1]
-			sb.WriteString(fmt.Sprintf("AllowedIPs = %s\n", tempAIPSLine))
-		}
+		sb.WriteString(fmt.Sprintf("AllowedIPs = %s\n", wc.ClientIPCIDR))
+		// tempAIPSLine := ""
+		// if len(wi.ClientAllowedIPsCIDR) > 0 {
+		// 	for _, d := range wi.ClientAllowedIPsCIDR {
+		// 		tempAIPSLine += d
+		// 		tempAIPSLine += ","
+		// 	}
+		// 	tempAIPSLine = tempAIPSLine[:len(tempAIPSLine)-1]
+		// 	sb.WriteString(fmt.Sprintf("AllowedIPs = %s\n", tempAIPSLine))
+		// }
 		sb.WriteString("\n")
 		sb.WriteString("\n")
 	}

@@ -20,15 +20,7 @@ func main() {
 	if !runningAsRoot {
 		log.Fatalln("You must run this app as Admin or Root!")
 	}
-	ls := utils.ExecTask{
-		Command: "ls",
-		Args:    []string{"-l"},
-		Shell:   false,
-	}
-	_, err = ls.Execute()
-	if err != nil {
-		panic(err)
-	}
+
 	//Load the config file
 	var wgc wg.WGConfig
 	err = wgc.ParseConfigFile(defaultConfigFilePath)
