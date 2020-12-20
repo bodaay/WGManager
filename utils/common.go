@@ -5,6 +5,7 @@ import (
 	"crypto/md5"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -22,7 +23,6 @@ import (
 	// usbdrivedetector "github.com/deepakjois/gousbdrivedetector"
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/google/uuid"
-	"golang.org/x/sys/windows"
 )
 
 const MyTimeFormatWithTimeZone = "2006-01-02T15-04-05 -0700"
@@ -409,32 +409,33 @@ func GetMeFileListInFolders(folderName string, specificExtension string, IgnoreS
 //CheckIfAdminOrRoot Cross platform to check if running as Admin or Root
 func CheckIfAdminOrRoot() (bool, error) {
 	if runtime.GOOS == "windows" { //got it from: https://coolaj86.com/articles/golang-and-windows-and-admins-oh-my/
-		var sid *windows.SID
-		err := windows.AllocateAndInitializeSid(
-			&windows.SECURITY_NT_AUTHORITY,
-			2,
-			windows.SECURITY_BUILTIN_DOMAIN_RID,
-			windows.DOMAIN_ALIAS_RID_ADMINS,
-			0, 0, 0, 0, 0, 0,
-			&sid)
-		if err != nil {
-			// log.Fatalf("SID Error: %s", err)
-			return false, err
-		}
+		// var sid *windows.SID
+		// err := windows.AllocateAndInitializeSid(
+		// 	&windows.SECURITY_NT_AUTHORITY,
+		// 	2,
+		// 	windows.SECURITY_BUILTIN_DOMAIN_RID,
+		// 	windows.DOMAIN_ALIAS_RID_ADMINS,
+		// 	0, 0, 0, 0, 0, 0,
+		// 	&sid)
+		// if err != nil {
+		// 	// log.Fatalf("SID Error: %s", err)
+		// 	return false, err
+		// }
 
-		// This appears to cast a null pointer so I'm not sure why this
-		// works, but this guy says it does and it Works for Me™:
-		// https://github.com/golang/go/issues/28804#issuecomment-438838144
-		token := windows.Token(0)
+		// // This appears to cast a null pointer so I'm not sure why this
+		// // works, but this guy says it does and it Works for Me™:
+		// // https://github.com/golang/go/issues/28804#issuecomment-438838144
+		// token := windows.Token(0)
 
-		memberIsadmin, err := token.IsMember(sid)
-		if err != nil {
-			// log.Fatalf("Token Membership Error: %s", err)
-			return false, err
-		}
-		// token.IsElevated() //this if you want to check if elevated
-		// log.Println(memberIsadmin)
-		return memberIsadmin, nil
+		// memberIsadmin, err := token.IsMember(sid)
+		// if err != nil {
+		// 	// log.Fatalf("Token Membership Error: %s", err)
+		// 	return false, err
+		// }
+		// // token.IsElevated() //this if you want to check if elevated
+		// // log.Println(memberIsadmin)
+		// return memberIsadmin, nil
+		return false, errors.New("Windows not supported")
 	} else { //got it from: https://www.socketloop.com/tutorials/golang-force-your-program-to-run-with-root-permissions
 		cmd := exec.Command("id", "-u")
 		output, err := cmd.Output()
