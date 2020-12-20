@@ -200,7 +200,6 @@ func (wi *WGInstanceConfig) revokeClientByUUID(ClientUUID string, instancePath s
 	for _, wc := range wi.WGClients {
 		if wc.ClientUUID == ClientUUID {
 			wc.ClientUUID = ""
-			wc.ClientIPCIDR = ""
 			wc.IsAllocated = false
 			//we  have to change the keys
 			pkey, err := newPrivateKey()
