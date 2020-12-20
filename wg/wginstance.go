@@ -32,7 +32,7 @@ type WGInstanceConfig struct {
 	InstanceEthernetName string `json:"InstanceEthernetName"`
 }
 
-func (wi *WGInstanceConfig) Save(instancePath string) error {
+func (wi *WGInstanceConfig) save(instancePath string) error {
 	jsondata, err := json.MarshalIndent(wi, "", "  ")
 	if err != nil {
 		return err
@@ -43,7 +43,7 @@ func (wi *WGInstanceConfig) Save(instancePath string) error {
 	}
 	return nil
 }
-func (wi *WGInstanceConfig) Load(instancePath string) error {
+func (wi *WGInstanceConfig) load(instancePath string) error {
 	fdata, err := ioutil.ReadFile(instancePath)
 	if err != nil {
 		return err
@@ -54,14 +54,14 @@ func (wi *WGInstanceConfig) Load(instancePath string) error {
 	}
 	return nil
 }
-func (wi *WGInstanceConfig) Remove(instancePath string) error {
+func (wi *WGInstanceConfig) remove(instancePath string) error {
 	err := os.Remove(instancePath)
 	if err != nil {
 		return err
 	}
 	return nil
 }
-func (wi *WGInstanceConfig) Deploy(confpath string) error {
+func (wi *WGInstanceConfig) deploy(confpath string) error {
 	confFileName := fmt.Sprintf("%s.conf", wi.InstanceNameReadOnly)
 	confFileNameAndPath := path.Join(confpath, confFileName)
 	err := utils.CreateFolderIfNotExists(confpath)
@@ -103,7 +103,7 @@ func (wi *WGInstanceConfig) Deploy(confpath string) error {
 }
 
 //GenerateNewClients Generate The Clients for first time
-func (wi *WGInstanceConfig) GenerateServerAndClients(ipcidr string) error {
+func (wi *WGInstanceConfig) generateServerAndClients(ipcidr string) error {
 	possibleHosts, err := GenerateHostsForCIDR(ipcidr)
 	if err != nil {
 		return err
@@ -146,7 +146,7 @@ func (wi *WGInstanceConfig) GenerateServerAndClients(ipcidr string) error {
 
 }
 
-func (wi *WGInstanceConfig) FindClientBYIPCIDR(IPCIDR string) (*WGClient, error) {
+func (wi *WGInstanceConfig) findClientBYIPCIDR(IPCIDR string) (*WGClient, error) {
 	for _, wc := range wi.WGClients {
 		if wc.ClientIPCIDR == IPCIDR {
 			return wc, nil
@@ -155,7 +155,7 @@ func (wi *WGInstanceConfig) FindClientBYIPCIDR(IPCIDR string) (*WGClient, error)
 	return nil, errors.New("Client Not Found")
 }
 
-func (wi *WGInstanceConfig) AllocateClient(ClientUUID string, instancePath string, wgconfigPath string) error {
+func (wi *WGInstanceConfig) allocateClient(ClientUUID string, instancePath string, wgconfigPath string) error {
 	foundAvailable := false
 	//Check if he has been asigned an IP before
 	for _, wc := range wi.WGClients {
@@ -178,11 +178,17 @@ func (wi *WGInstanceConfig) AllocateClient(ClientUUID string, instancePath strin
 	}
 	instanceFileName := fmt.Sprintf("%s.json", wi.InstanceNameReadOnly)
 	finalFileNameAndPath := path.Join(instancePath, instanceFileName)
-	wi.Save(finalFileNameAndPath)
-	wi.Deploy(wgconfigPath)
+	err := wi.save(finalFileNameAndPath)
+	if err != nil {
+		return err
+	}
+	err = wi.deploy(wgconfigPath)
+	if err != nil {
+		return err
+	}
 	return nil
 }
-func (wi *WGInstanceConfig) RevokeClientByUUID(ClientUUID string, instancePath string, wgconfigPath string) error {
+func (wi *WGInstanceConfig) revokeClientByUUID(ClientUUID string, instancePath string, wgconfigPath string) error {
 	for _, wc := range wi.WGClients {
 		if wc.ClientUUID == ClientUUID {
 			wc.ClientUUID = ""
@@ -201,11 +207,17 @@ func (wi *WGInstanceConfig) RevokeClientByUUID(ClientUUID string, instancePath s
 	}
 	instanceFileName := fmt.Sprintf("%s.json", wi.InstanceNameReadOnly)
 	finalFileNameAndPath := path.Join(instancePath, instanceFileName)
-	wi.Save(finalFileNameAndPath)
-	wi.Deploy(wgconfigPath)
+	err := wi.save(finalFileNameAndPath)
+	if err != nil {
+		return err
+	}
+	err = wi.deploy(wgconfigPath)
+	if err != nil {
+		return err
+	}
 	return nil
 }
-func (wi *WGInstanceConfig) RevokeClientByIPCIDR(IPCIDR string) error {
+func (wi *WGInstanceConfig) revokeClientByIPCIDR(IPCIDR string) error {
 	for _, wc := range wi.WGClients {
 		if wc.ClientIPCIDR == wc.ClientIPCIDR {
 			wc.ClientUUID = ""

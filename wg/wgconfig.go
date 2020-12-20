@@ -105,7 +105,7 @@ func (w *WGConfig) LoadInstancesFiles() error {
 	instacesFiles := utils.GetMeFileListInFolders(w.InstancesConfigPath, ".json", true, false, true)
 	for _, ifile := range instacesFiles {
 		var wginstance WGInstanceConfig
-		err := wginstance.Load(ifile)
+		err := wginstance.load(ifile)
 		if err != nil {
 			return err
 		}
@@ -122,7 +122,7 @@ func (w *WGConfig) AllocateClient(instanceName string, clientuuid string) error 
 	}
 	w.Lock()
 	defer w.Unlock()
-	err = wi.AllocateClient(clientuuid, w.InstancesConfigPath, w.WGInsatncesServiceFilePath)
+	err = wi.allocateClient(clientuuid, w.InstancesConfigPath, w.WGInsatncesServiceFilePath)
 	if err != nil {
 		return err
 	}
@@ -136,7 +136,7 @@ func (w *WGConfig) RevokeClient(instanceName string, clientuuid string) error {
 	}
 	w.Lock()
 	defer w.Unlock()
-	err = wi.RevokeClientByUUID(clientuuid, w.InstancesConfigPath, w.WGInsatncesServiceFilePath)
+	err = wi.revokeClientByUUID(clientuuid, w.InstancesConfigPath, w.WGInsatncesServiceFilePath)
 	if err != nil {
 		return err
 	}
@@ -157,7 +157,7 @@ func (w *WGConfig) DeployInstanceByName(instanceName string) error {
 	if err != nil {
 		return fmt.Errorf("instance name not found: %s", instanceName)
 	}
-	err = wi.Deploy(w.WGInsatncesServiceFilePath)
+	err = wi.deploy(w.WGInsatncesServiceFilePath)
 	if err != nil {
 		return err
 	}
@@ -171,7 +171,7 @@ func (w *WGConfig) RemoveInstanceByName(instanceName string) error {
 	w.Lock()
 	defer w.Unlock()
 	finalFileNameAndPath := path.Join(w.InstancesConfigPath, wi.InstanceNameReadOnly+".json")
-	err = wi.Remove(finalFileNameAndPath)
+	err = wi.remove(finalFileNameAndPath)
 	for i, v := range w.WGInstances {
 		if v == wi {
 			w.WGInstances = append(w.WGInstances[:i], w.WGInstances[i+1:]...)
@@ -246,7 +246,7 @@ func (w *WGConfig) CreateNewInstance(instanceCIDR string, instancePort uint16, i
 	}
 	wgInstance.InstancePubKey = pkey.Public().String()
 	wgInstance.InstancePriKey = pkey.String()
-	err = wgInstance.GenerateServerAndClients(instanceCIDR) //// wgInstance.InstanceServerIPCIDRReadOnly will be set using this function,
+	err = wgInstance.generateServerAndClients(instanceCIDR) //// wgInstance.InstanceServerIPCIDRReadOnly will be set using this function,
 	if err != nil {
 		return err
 	}
@@ -262,7 +262,7 @@ func (w *WGConfig) CreateNewInstance(instanceCIDR string, instancePort uint16, i
 	finalFileNameAndPath := path.Join(w.InstancesConfigPath, instanceFileName)
 	w.Lock()
 	defer w.Unlock()
-	err = wgInstance.Save(finalFileNameAndPath)
+	err = wgInstance.save(finalFileNameAndPath)
 	if err != nil {
 		return err
 	}

@@ -34,7 +34,7 @@ PersistentKeepalive = 10
 
 */
 
-func (wg *WGClient) CreateClientConfigString(serverAddress string, serverPubKey string, DNSServers []string, AllowedIPs []string, Endpoint string, KeepAlive uint16) (string, error) {
+func (wg *WGClient) createClientConfigString(serverAddress string, serverPubKey string, DNSServers []string, AllowedIPs []string, Endpoint string, KeepAlive uint16) (string, error) {
 	if !wg.IsAllocated {
 		return "", errors.New("Client is not allocated, sorry")
 	}
@@ -69,8 +69,8 @@ func (wg *WGClient) CreateClientConfigString(serverAddress string, serverPubKey 
 	return sb.String(), nil
 }
 
-func (wg *WGClient) CreateClientConfigQRCodePicture(content string, filepath string) error {
-	data, err := wg.CreateClientConfigQRCode(content)
+func (wg *WGClient) createClientConfigQRCodePicture(content string, filepath string) error {
+	data, err := wg.createClientConfigQRCode(content)
 	if err != nil {
 		return err
 	}
@@ -80,7 +80,7 @@ func (wg *WGClient) CreateClientConfigQRCodePicture(content string, filepath str
 	}
 	return nil
 }
-func (wg *WGClient) CreateClientConfigQRCode(content string) ([]byte, error) {
+func (wg *WGClient) createClientConfigQRCode(content string) ([]byte, error) {
 	imgbytes, err := qrcode.Encode(content, qrcode.High, 256)
 	if err != nil {
 		return nil, err
