@@ -1,8 +1,10 @@
 package main
 
 import (
+	"WGManager/utils"
 	"WGManager/webapi"
 	"WGManager/wg"
+	"log"
 	"os"
 )
 
@@ -11,9 +13,25 @@ func main() {
 	if len(os.Args) > 1 {
 		defaultConfigFilePath = os.Args[1]
 	}
+	runningAsRoot, err := utils.CheckIfAdminOrRoot()
+	if err != nil {
+		panic(err)
+	}
+	if !runningAsRoot {
+		log.Fatalln("You must run this app as Admin or Root!")
+	}
+	ls := utils.ExecTask{
+		Command: "ls",
+		Args:    []string{"-l"},
+		Shell:   false,
+	}
+	_, err = ls.Execute()
+	if err != nil {
+		panic(err)
+	}
 	//Load the config file
 	var wgc wg.WGConfig
-	err := wgc.ParseConfigFile(defaultConfigFilePath)
+	err = wgc.ParseConfigFile(defaultConfigFilePath)
 	if err != nil {
 		newconfig, err := wgc.CreateDefaultconfig(defaultConfigFilePath)
 		if err != nil {
