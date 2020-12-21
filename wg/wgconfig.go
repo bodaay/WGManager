@@ -22,7 +22,7 @@ const defaultAPIUseTLS = false
 const defaultAPICertFile = "/etc/ssl/wgman/wgman.cert"
 const defaultAPIKeyFile = "/etc/ssl/wgman/wgman.key"
 
-var defaultAllowedIPsCIDR = []string{"0.0.0.0/32"}
+var defaultAllowedIPsCIDR = []string{"0.0.0.0/0"}
 
 const defaultFirstInstanceCIDR = "172.27.36.0/22"
 const defaultFirstInstancePort = 22200

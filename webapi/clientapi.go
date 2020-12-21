@@ -38,11 +38,19 @@ func StartClient(wgConfig *wg.WGConfig) error {
 	configureClientWebServer(e)
 	configureAllRoutesClient(e, wgConfig)
 	address := (wgConfig.APIListenAddress + ":" + strconv.Itoa(int(wgConfig.APIListenPort)))
-	//err := e.StartTLS(address, (config.RootCertFile), (config.RootCertKey))
-	err := e.Start(address)
-	if err != nil {
-		panic("Error StartWebClient StartTLS")
+	if wgConfig.APIUseTLS {
+		err := e.StartTLS(address, (wgConfig.APITLSCert), (wgConfig.APITLSKey))
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		err := e.Start(address)
+		if err != nil {
+			panic(err)
+		}
 	}
+	//
+
 	return nil
 }
 func configureClientWebServer(e *echo.Echo) {
@@ -86,7 +94,7 @@ func postAllocateClient(e *echo.Echo, wgConfig *wg.WGConfig) {
 			responseObj = err.Error()
 			return c.JSONPretty(http.StatusBadRequest, responseObj, "  ")
 		}
-		return c.Stream(http.StatusOK, "image/jpeg", bytes.NewReader(qrbytes))
+		return c.Stream(http.StatusOK, "image/png", bytes.NewReader(qrbytes))
 		//return c.JSONPretty(http.StatusOK, responseObj, "  ")
 	})
 }
