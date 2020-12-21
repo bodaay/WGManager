@@ -182,7 +182,11 @@ func (w *WGConfig) DeployInstanceByName(instanceName string) error {
 	if err != nil {
 		return err
 	}
-	output, err := restartWGInstance(instanceName)
+	output, err := enableWGInstanceService(instanceName)
+	if err != nil {
+		return err
+	}
+	output, err = restartWGInstance(instanceName)
 	if err != nil {
 		return err
 	}
@@ -198,6 +202,10 @@ func (w *WGConfig) RemoveInstanceByName(instanceName string) error {
 	defer w.Unlock()
 	finalFileNameAndPath := path.Join(w.InstancesConfigPath, wi.InstanceNameReadOnly+".json")
 	output, err := stopWGInstance(instanceName)
+	if err != nil {
+		return err
+	}
+	output, err = disableWGInstanceService(instanceName)
 	if err != nil {
 		return err
 	}

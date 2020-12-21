@@ -43,3 +43,25 @@ func startWGInstance(instanceName string) (string, error) {
 	}
 	return res.Stdout, nil
 }
+
+func enableWGInstanceService(instanceName string) (string, error) {
+	cmd := controlWgInstance
+	cmd.Args[1] = fmt.Sprintf("wg-quick@%s", instanceName)
+	cmd.Args[0] = "enable"
+	res, err := cmd.Execute()
+	if err != nil {
+		return "", err
+	}
+	return res.Stdout, nil
+}
+
+func disableWGInstanceService(instanceName string) (string, error) {
+	cmd := controlWgInstance
+	cmd.Args[1] = fmt.Sprintf("wg-quick@%s", instanceName)
+	cmd.Args[0] = "disable"
+	res, err := cmd.Execute()
+	if err != nil {
+		return "", err
+	}
+	return res.Stdout, nil
+}
