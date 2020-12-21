@@ -39,7 +39,7 @@ type WGConfig struct {
 	APIUseTLS                  bool                `json:"api_use_tls"`
 	APITLSCert                 string              `json:"apitls_cert"`
 	APITLSKey                  string              `json:"apitls_key"`
-	APIAllowedIPS              []string            `json:"api_allowed_ips"`
+	APIAllowedIPSCIDR          []string            `json:"api_allowed_ipscidr"`
 	InstancesConfigPath        string              `json:"instances_config_path"`
 	WGInsatncesServiceFilePath string              `json:"wg_insatnces_service_file_path"`
 	WGInstances                []*WGInstanceConfig `json:"wg_instances"`
@@ -57,7 +57,7 @@ func (w *WGConfig) CreateDefaultconfig(configpath string) (*WGConfig, error) {
 	wgdefault.APIUseTLS = defaultAPIUseTLS
 	wgdefault.APITLSCert = defaultAPICertFile
 	wgdefault.APITLSKey = defaultAPIKeyFile
-	wgdefault.APIAllowedIPS = defaultAllowedIPsCIDR
+	wgdefault.APIAllowedIPSCIDR = defaultAllowedIPsCIDR
 	wgdefault.InstancesConfigPath = defaultInstanceConfigPath
 
 	if runtime.GOOS == "windows" {

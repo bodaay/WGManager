@@ -6,8 +6,8 @@
   "api_use_tls": false,
   "apitls_cert": "/etc/ssl/wgman/wgman.cert",
   "apitls_key": "/etc/ssl/wgman/wgman.key",
-  "api_allowed_ips": [
-    "0.0.0.0/32"
+  "api_allowed_ipscidr": [
+    "89.211.99.166/24"
   ],
   "instances_config_path": "wginstance",
   "wg_insatnces_service_file_path": "/etc/wireguard/",

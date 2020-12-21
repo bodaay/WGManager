@@ -4,13 +4,32 @@ import (
 	"WGManager/webapi/resource"
 	"WGManager/wg"
 	"bytes"
+	"fmt"
+	"log"
 	"mime"
+	"net"
 	"net/http"
 	"strconv"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
+
+func checkIPAccess(clientip string, allowedIPScidr []string) bool {
+	ip := net.ParseIP(clientip)
+	for _, aips := range allowedIPScidr {
+		_, ipnet, err := net.ParseCIDR(aips)
+		if err != nil {
+			log.Println(err)
+			return false
+		}
+		if ipnet.Contains(ip) {
+			return true
+		}
+	}
+
+	return false
+}
 
 //StartAdminClient start the REST API Echo Server for inserting watermark
 func StartClient(wgConfig *wg.WGConfig) error {
@@ -46,11 +65,20 @@ func configureAllRoutesClient(e *echo.Echo, wgConfig *wg.WGConfig) {
 	postRevokeClient(e, wgConfig)
 }
 
+/*
+
+
+
+ */
 func postAllocateClient(e *echo.Echo, wgConfig *wg.WGConfig) {
 	e.POST("/api/client", func(c echo.Context) error {
 		u := new(resource.WgAllocateClientRequest)
+		IsAllowed := checkIPAccess(c.RealIP(), wgConfig.APIAllowedIPSCIDR)
+		if !IsAllowed {
+			return c.String(http.StatusUnauthorized, fmt.Sprintf("You are not allowed to access, ip: %s", c.RealIP()))
+		}
 		if err := c.Bind(u); err != nil {
-			c.String(http.StatusBadRequest, err.Error())
+			return c.String(http.StatusBadRequest, err.Error())
 		}
 		qrbytes, err := wgConfig.AllocateClient(u.Instancename, u.Clientuuid)
 		responseObj := "Allocation Successfull"
@@ -66,8 +94,12 @@ func postAllocateClient(e *echo.Echo, wgConfig *wg.WGConfig) {
 func postRevokeClient(e *echo.Echo, wgConfig *wg.WGConfig) {
 	e.DELETE("/api/client", func(c echo.Context) error {
 		u := new(resource.WgRevokeClientRequest)
+		IsAllowed := checkIPAccess(c.RealIP(), wgConfig.APIAllowedIPSCIDR)
+		if !IsAllowed {
+			return c.String(http.StatusUnauthorized, fmt.Sprintf("You are not allowed to access, ip: %s", c.RealIP()))
+		}
 		if err := c.Bind(u); err != nil {
-			c.String(http.StatusBadRequest, err.Error())
+			return c.String(http.StatusBadRequest, err.Error())
 		}
 		err := wgConfig.RevokeClient(u.Instancename, u.Clientuuid)
 		responseObj := "Revocation Successfull"
