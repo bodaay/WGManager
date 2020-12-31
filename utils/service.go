@@ -1,66 +1,57 @@
 package utils
 
 import (
-	"time"
-
-	"github.com/kardianos/service"
+	"fmt"
+	"io/ioutil"
+	"path"
 )
 
-var Logger service.Logger
-
-var ServiceIntervalInSeconds uint
-
-var RunProcess func() error
-
-var ServiceStopNow bool
-
-var ReadyToStop bool
-
-type Program struct {
-	exit chan struct{}
-}
-
-func (p *Program) Start(s service.Service) error {
-
-	if service.Interactive() {
-		Logger.Info("Running in terminal.")
-	} else {
-		Logger.Info("Running under service manager.")
+//InstallLinuxService the service file for the current project
+func InstallLinuxService(ServiceName string, ServiceDescription string, ServiceWorkingDirectory string, executableFile string, User string) error {
+	var controlService = ExecTask{
+		Command: "/usr/bin/systemctl",
+		Args:    []string{"Enable", ""},
+		Shell:   true,
 	}
-	p.exit = make(chan struct{})
+	//we will only support ubuntu at the moment, later Imran will supprt all os
+	osInstallServiceFilesLocation := "/etc/systemd/system"
+	serviceFileLocation := path.Join(osInstallServiceFilesLocation, ServiceName)
+	// executableLocation := path.Join(webAPILocation, excutableFile)
 
-	// Start should not block. Do the actual work async.
-	go p.run()
+	serviceFileData := `[Unit]
+Description=` + ServiceDescription + `
+
+[Service]
+WorkingDirectory=` + ServiceWorkingDirectory + `
+ExecStart=` + executableFile + `
+RestartSec=always
+# Auto restart in 3 Seconds
+Restart=3
+# Time to wait for process to exit before sending kill signal
+TimeoutStopSec=10
+KillSignal=SIGINT
+SyslogIdentifier=` + ServiceName + `-Log
+# This is how I created this user: sudo adduser --no-create-home --disabled-login --shell /bin/false dotnet
+User=` + User + `
+# add as many Env vairbales required here
+#Environment=GO_ENVIRONMENT=Production
+
+[Install]
+WantedBy=multi-user.target
+`
+
+	err := ioutil.WriteFile(serviceFileLocation, []byte(serviceFileData), 0755)
+	if err != nil {
+		fmt.Printf("Service File Created Failed\n")
+		return err
+	}
+	cmd := controlService
+	cmd.Args[1] = ServiceName
+	cmd.Args[0] = "enable"
+	_, err = cmd.Execute()
+	if err != nil {
+		return err
+	}
 	return nil
-}
-func (p *Program) run() error {
-	go RunProcess() //this function will be set by main
-	ticker := time.NewTicker(2 * time.Second)
-	for {
-		select {
-		case <-ticker.C:
-			// Logger.Infof("ZenExporter Still running at %v...", tm)
-		case <-p.exit:
-			ticker.Stop()
-			return nil
-		}
-	}
-}
-func (p *Program) Stop(s service.Service) error {
-	// Any work in Stop should be quick, usually a few seconds at most.
-	Logger.Info("I'm Stopping!")
-	ServiceStopNow = true
-	//we will wait for 5 seconds only, if not, we will just ignore that shit and force stop
-	MaxWaitTime := 5 * 1000
-	totalWaitTime := 0
-	for {
-		time.Sleep(10 * time.Millisecond)
-		if ReadyToStop || totalWaitTime >= MaxWaitTime {
-			break
-		}
-		totalWaitTime += 10
-	}
-	Logger.Info("Service Stopped")
-	close(p.exit)
-	return nil
+
 }
