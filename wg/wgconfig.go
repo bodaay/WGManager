@@ -117,29 +117,33 @@ func (w *WGConfig) LoadInstancesFiles() error {
 	return nil
 }
 
-func (w *WGConfig) AllocateClient(instanceName string, clientuuid string) ([]byte, string, error) {
+func (w *WGConfig) AllocateClient(instanceName string, clientuuid string) ([]byte, string, string, error) {
 	wi, err := w.FindInstanceByName(instanceName)
 	if err != nil {
-		return nil, "", fmt.Errorf("instance name not found: %s", instanceName)
+		return nil, "", "", fmt.Errorf("instance name not found: %s", instanceName)
 	}
 	w.Lock()
 	defer w.Unlock()
 	wc, err := wi.allocateClient(clientuuid, w.InstancesConfigPath, w.WGInsatncesServiceFilePath)
 	if err != nil {
-		return nil, "", err
+		return nil, "", "", err
 	}
 	if wc != nil {
 		qrcontent, err := wc.createClientConfigString(wi.InstanceServerIPCIDRReadOnly, wi.InstancePubKey, wi.ClientInstanceDNSServers, wi.ClientAllowedIPsCIDR, wi.InstanceEndPointHostname, uint16(wi.ClientKeepAlive), wi.InstanceServerPortReadOnly)
 		if err != nil {
-			return nil, "", err
+			return nil, "", "", err
+		}
+		qrcontentJSONString, err := wc.createClientConfigJSONString(wi.InstanceServerIPCIDRReadOnly, wi.InstancePubKey, wi.ClientInstanceDNSServers, wi.ClientAllowedIPsCIDR, wi.InstanceEndPointHostname, uint16(wi.ClientKeepAlive), wi.InstanceServerPortReadOnly)
+		if err != nil {
+			return nil, "", "", err
 		}
 		qrbytes, err := wc.createClientConfigQRCode(qrcontent)
 		if err != nil {
-			return nil, "", err
+			return nil, "", "", err
 		}
-		return qrbytes, qrcontent, nil
+		return qrbytes, qrcontent, qrcontentJSONString, nil
 	}
-	return nil, "", errors.New("Client Allocaiton failed")
+	return nil, "", "", errors.New("Client Allocaiton failed")
 }
 
 func (w *WGConfig) RevokeClient(instanceName string, clientuuid string) error {

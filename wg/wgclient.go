@@ -1,6 +1,7 @@
 package wg
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -19,6 +20,16 @@ type WGClient struct {
 	GeneratedTimestamp string `json:"generated_timestamp"`
 	AllocatedTimestamp string `json:"allocated_timestamp"`
 	RevokedTimestamp   string `json:"revoked_timestamp"`
+}
+
+type confData struct {
+	ClientAddress       string   `json:"Address"`
+	PrivateKey          string   `json:"PrivateKey"`
+	PublicKey           string   `json:"PublicKey"`
+	Endpoint            string   `json:"Endpoint"`
+	DNS                 []string `json:"DNS"`
+	AllowedIPs          []string `json:"AllowedIPs"`
+	PersistentKeepalive uint16   `json:"PersistentKeepalive"`
 }
 
 /*
@@ -69,6 +80,25 @@ func (wg *WGClient) createClientConfigString(serverAddress string, serverPubKey 
 	return sb.String(), nil
 }
 
+func (wg *WGClient) createClientConfigJSONString(serverAddress string, serverPubKey string, DNSServers []string, AllowedIPs []string, Endpoint string, KeepAlive uint16, instancePort uint16) (string, error) {
+	if !wg.IsAllocated {
+		return "", errors.New("Client is not allocated, sorry")
+	}
+	cJson := confData{
+		ClientAddress:       wg.ClientIPCIDR,
+		PrivateKey:          wg.ClientPriKey,
+		PublicKey:           serverPubKey,
+		Endpoint:            Endpoint,
+		DNS:                 DNSServers,
+		AllowedIPs:          AllowedIPs,
+		PersistentKeepalive: KeepAlive,
+	}
+	jBytes, err := json.MarshalIndent(cJson, "", "  ")
+	if err != nil {
+		return "", err
+	}
+	return string(jBytes), nil
+}
 func (wg *WGClient) createClientConfigQRCodePicture(content string, filepath string) error {
 	data, err := wg.createClientConfigQRCode(content)
 	if err != nil {

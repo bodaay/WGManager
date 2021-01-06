@@ -3,6 +3,7 @@ package webapi
 import (
 	"WGManager/webapi/resource"
 	"WGManager/wg"
+	"bytes"
 	"fmt"
 	"log"
 	"mime"
@@ -69,7 +70,9 @@ func configureClientWebServer(e *echo.Echo) {
 
 func configureAllRoutesClient(e *echo.Echo, wgConfig *wg.WGConfig, softwareVersion string) {
 	getServerStatus(e, wgConfig, softwareVersion)
-	postAllocateClient(e, wgConfig)
+	postAllocateClientConf(e, wgConfig)
+	postAllocateClientQR(e, wgConfig)
+	postAllocateClientJSON(e, wgConfig)
 	postRevokeClient(e, wgConfig)
 	postRevokeClientAll(e, wgConfig)
 }
@@ -84,7 +87,49 @@ func getServerStatus(e *echo.Echo, wgConfig *wg.WGConfig, softwareVersion string
 		return c.String(http.StatusOK, fmt.Sprintf("WGManager API status: OK, Version: %s", softwareVersion))
 	})
 }
-func postAllocateClient(e *echo.Echo, wgConfig *wg.WGConfig) {
+func postAllocateClientQR(e *echo.Echo, wgConfig *wg.WGConfig) {
+	e.POST("/api/client/qr", func(c echo.Context) error {
+		u := new(resource.WgAllocateClientRequest)
+		IsAllowed := checkIPAccess(c.RealIP(), wgConfig.APIAllowedIPSCIDR)
+		if !IsAllowed {
+			return c.String(http.StatusUnauthorized, fmt.Sprintf("You are not allowed to access, ip: %s", c.RealIP()))
+		}
+		if err := c.Bind(u); err != nil {
+			return c.String(http.StatusBadRequest, err.Error())
+		}
+		qrbytes, _, _, err := wgConfig.AllocateClient(u.Instancename, u.Clientuuid)
+		// responseObj := "Allocation Successfull"
+		if err != nil {
+
+			return c.JSONPretty(http.StatusBadRequest, err.Error(), "  ")
+		}
+		return c.Stream(http.StatusOK, "image/png", bytes.NewReader(qrbytes))
+		// return c.String(http.StatusOK, qrcontent)
+	})
+}
+
+func postAllocateClientJSON(e *echo.Echo, wgConfig *wg.WGConfig) {
+	e.POST("/api/client/json", func(c echo.Context) error {
+		u := new(resource.WgAllocateClientRequest)
+		IsAllowed := checkIPAccess(c.RealIP(), wgConfig.APIAllowedIPSCIDR)
+		if !IsAllowed {
+			return c.String(http.StatusUnauthorized, fmt.Sprintf("You are not allowed to access, ip: %s", c.RealIP()))
+		}
+		if err := c.Bind(u); err != nil {
+			return c.String(http.StatusBadRequest, err.Error())
+		}
+		_, _, qrjson, err := wgConfig.AllocateClient(u.Instancename, u.Clientuuid)
+		// responseObj := "Allocation Successfull"
+		if err != nil {
+
+			return c.JSONPretty(http.StatusBadRequest, err.Error(), "  ")
+		}
+		// return c.Stream(http.StatusOK, "image/png", bytes.NewReader(qrbytes))
+		return c.String(http.StatusOK, qrjson)
+	})
+}
+
+func postAllocateClientConf(e *echo.Echo, wgConfig *wg.WGConfig) {
 	e.POST("/api/client", func(c echo.Context) error {
 		u := new(resource.WgAllocateClientRequest)
 		IsAllowed := checkIPAccess(c.RealIP(), wgConfig.APIAllowedIPSCIDR)
@@ -94,7 +139,7 @@ func postAllocateClient(e *echo.Echo, wgConfig *wg.WGConfig) {
 		if err := c.Bind(u); err != nil {
 			return c.String(http.StatusBadRequest, err.Error())
 		}
-		_, qrcontent, err := wgConfig.AllocateClient(u.Instancename, u.Clientuuid)
+		_, qrcontent, _, err := wgConfig.AllocateClient(u.Instancename, u.Clientuuid)
 		// responseObj := "Allocation Successfull"
 		if err != nil {
 
