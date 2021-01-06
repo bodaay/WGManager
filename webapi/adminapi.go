@@ -57,7 +57,7 @@ func postAddWgInstance(e *echo.Echo, wgConfig *wg.WGConfig) {
 		if err := c.Bind(u); err != nil {
 			c.String(http.StatusBadRequest, err.Error())
 		}
-		err := wgConfig.CreateNewInstance(u.IP, u.Port, u.DNS, u.UseNAT, u.EthernetName, uint64(u.MaxClient))
+		err := wgConfig.CreateNewInstance(u.IP, u.EndpointHost, u.Port, u.DNS, u.UseNAT, u.EthernetName, uint64(u.MaxClient))
 		responseObj := "Add Successfull"
 		if err != nil {
 			responseObj = err.Error()

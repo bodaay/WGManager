@@ -3,7 +3,6 @@ package webapi
 import (
 	"WGManager/webapi/resource"
 	"WGManager/wg"
-	"bytes"
 	"fmt"
 	"log"
 	"mime"
@@ -32,11 +31,11 @@ func checkIPAccess(clientip string, allowedIPScidr []string) bool {
 }
 
 //StartAdminClient start the REST API Echo Server for inserting watermark
-func StartClient(wgConfig *wg.WGConfig) error {
+func StartClient(wgConfig *wg.WGConfig, softwareVersion string) error {
 	e := echo.New()
 	const subserviceIdentifier = "StartWebClient"
 	configureClientWebServer(e)
-	configureAllRoutesClient(e, wgConfig)
+	configureAllRoutesClient(e, wgConfig, softwareVersion)
 	address := (wgConfig.APIListenAddress + ":" + strconv.Itoa(int(wgConfig.APIListenPort)))
 	if wgConfig.APIUseTLS {
 		err := e.StartTLS(address, (wgConfig.APITLSCert), (wgConfig.APITLSKey))
@@ -68,9 +67,11 @@ func configureClientWebServer(e *echo.Echo) {
 
 }
 
-func configureAllRoutesClient(e *echo.Echo, wgConfig *wg.WGConfig) {
+func configureAllRoutesClient(e *echo.Echo, wgConfig *wg.WGConfig, softwareVersion string) {
+	getServerStatus(e, wgConfig, softwareVersion)
 	postAllocateClient(e, wgConfig)
 	postRevokeClient(e, wgConfig)
+	postRevokeClientAll(e, wgConfig)
 }
 
 /*
@@ -78,6 +79,11 @@ func configureAllRoutesClient(e *echo.Echo, wgConfig *wg.WGConfig) {
 
 
  */
+func getServerStatus(e *echo.Echo, wgConfig *wg.WGConfig, softwareVersion string) {
+	e.GET("/api/client", func(c echo.Context) error {
+		return c.String(http.StatusOK, fmt.Sprintf("WGManager API status: OK, Version: %s", softwareVersion))
+	})
+}
 func postAllocateClient(e *echo.Echo, wgConfig *wg.WGConfig) {
 	e.POST("/api/client", func(c echo.Context) error {
 		u := new(resource.WgAllocateClientRequest)
@@ -88,14 +94,14 @@ func postAllocateClient(e *echo.Echo, wgConfig *wg.WGConfig) {
 		if err := c.Bind(u); err != nil {
 			return c.String(http.StatusBadRequest, err.Error())
 		}
-		qrbytes, err := wgConfig.AllocateClient(u.Instancename, u.Clientuuid)
-		responseObj := "Allocation Successfull"
+		_, qrcontent, err := wgConfig.AllocateClient(u.Instancename, u.Clientuuid)
+		// responseObj := "Allocation Successfull"
 		if err != nil {
-			responseObj = err.Error()
-			return c.JSONPretty(http.StatusBadRequest, responseObj, "  ")
+
+			return c.JSONPretty(http.StatusBadRequest, err.Error(), "  ")
 		}
-		return c.Stream(http.StatusOK, "image/png", bytes.NewReader(qrbytes))
-		//return c.JSONPretty(http.StatusOK, responseObj, "  ")
+		// return c.Stream(http.StatusOK, "image/png", bytes.NewReader(qrbytes))
+		return c.String(http.StatusOK, qrcontent)
 	})
 }
 
@@ -118,5 +124,24 @@ func postRevokeClient(e *echo.Echo, wgConfig *wg.WGConfig) {
 		}
 
 		return c.JSONPretty(http.StatusOK, responseObj, "  ")
+	})
+}
+
+func postRevokeClientAll(e *echo.Echo, wgConfig *wg.WGConfig) {
+	e.DELETE("/api/client/all", func(c echo.Context) error {
+		u := new(resource.WgRevokeClientRequest)
+		IsAllowed := checkIPAccess(c.RealIP(), wgConfig.APIAllowedIPSCIDR)
+		if !IsAllowed {
+			return c.String(http.StatusUnauthorized, fmt.Sprintf("You are not allowed to access, ip: %s", c.RealIP()))
+		}
+		if err := c.Bind(u); err != nil {
+			return c.String(http.StatusBadRequest, err.Error())
+		}
+		for _, insta := range wgConfig.WGInstances {
+			wgConfig.RevokeClient(insta.InstanceNameReadOnly, u.Clientuuid)
+
+		}
+
+		return c.JSONPretty(http.StatusOK, "Revoked Client from all insatnces", "  ")
 	})
 }

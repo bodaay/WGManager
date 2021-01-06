@@ -166,7 +166,8 @@ func (wi *WGInstanceConfig) allocateClient(ClientUUID string, instancePath strin
 	//Check if he has been asigned an IP before
 	for _, wc := range wi.WGClients {
 		if wc.ClientUUID == ClientUUID {
-			return nil, fmt.Errorf("ClientUUID Exists to Another IP CIDDR: %s\tinstance name: %s", wc.ClientIPCIDR, wi.InstanceNameReadOnly)
+			// return nil, fmt.Errorf("ClientUUID Exists to Another IP CIDDR: %s\tinstance name: %s", wc.ClientIPCIDR, wi.InstanceNameReadOnly)
+			return wc, nil
 		}
 
 	}

@@ -10,6 +10,9 @@ import (
 	"path/filepath"
 )
 
+//WGManagerVersion WGManager Software Version
+const WGManagerVersion = "1.0"
+
 func main() {
 	defaultConfigFilePath := "wgmanconfig.json"
 	if len(os.Args) > 1 {
@@ -55,6 +58,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	go webapi.StartClient(&wgc)
+	go webapi.StartClient(&wgc, WGManagerVersion)
 	webapi.StartAdminClient(&wgc)
 }

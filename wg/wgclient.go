@@ -55,7 +55,7 @@ func (wg *WGClient) createClientConfigString(serverAddress string, serverPubKey 
 	//peer config is the wg instance
 	sb.WriteString("[Peer]\n")
 	sb.WriteString(fmt.Sprintf("PublicKey = %s\n", serverPubKey))
-	sb.WriteString(fmt.Sprintf("Endpoint = %s:%d\n", Endpoint, instancePort))
+	sb.WriteString(fmt.Sprintf("Endpoint = %s\n", Endpoint))
 	tempAIPSLine := ""
 	if len(AllowedIPs) > 0 {
 		for _, d := range AllowedIPs {
