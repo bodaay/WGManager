@@ -1,0 +1,1 @@
+* Do the logic to check if IP forward is enabled, cat /proc/sys/net/ipv4/ip_forward
