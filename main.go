@@ -6,8 +6,6 @@ import (
 	"WGManager/wg"
 	"log"
 	"os"
-	"path"
-	"path/filepath"
 )
 
 //WGManagerVersion WGManager Software Version
@@ -25,23 +23,23 @@ func main() {
 	if !runningAsRoot {
 		log.Fatalln("You must run this app as Admin or Root!")
 	}
-	//Creating service file for the project if it doesnt exist
-	servicefilename := "wgmanager.service"
-	//fmt.Printf("Arg length %d\n", len(os.Args))
-	//Get current executable name and path
-	//TODO: this logic sucks, fix it
-	appExec, err := os.Executable()
-	if err != nil {
-		panic(err)
-	}
-	serviceFileLocation := path.Join("/etc/systemd/system", servicefilename)
-	log.Println(serviceFileLocation)
-	if !utils.FileExists(serviceFileLocation) {
-		err := utils.InstallLinuxService(servicefilename, "WgManager Core Service", filepath.Dir(appExec), appExec, "root")
-		if err != nil {
-			log.Println(err) //don't want to panic if this is the case
-		}
-	}
+	// //Creating service file for the project if it doesnt exist
+	// servicefilename := "wgmanager.service"
+	// //fmt.Printf("Arg length %d\n", len(os.Args))
+	// //Get current executable name and path
+	// //TODO: this logic sucks, fix it
+	// appExec, err := os.Executable()
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// serviceFileLocation := path.Join("/etc/systemd/system", servicefilename)
+	// log.Println(serviceFileLocation)
+	// if !utils.FileExists(serviceFileLocation) {
+	// 	err := utils.InstallLinuxService(servicefilename, "WgManager Core Service", filepath.Dir(appExec), appExec, "root")
+	// 	if err != nil {
+	// 		log.Println(err) //don't want to panic if this is the case
+	// 	}
+	// }
 
 	//Load the config file
 	var wgc wg.WGConfig

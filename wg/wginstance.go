@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net"
 	"os"
 	"path"
@@ -111,10 +112,12 @@ func (wi *WGInstanceConfig) deploy(confpath string) error {
 func (wi *WGInstanceConfig) generateServerAndClients(ipcidr string) error {
 	possibleHosts, err := GenerateHostsForCIDR(ipcidr)
 	if err != nil {
+		log.Println(err)
 		return err
 	}
 	_, ipnet, err := net.ParseCIDR(ipcidr)
 	if err != nil {
+		log.Println(err)
 		return err
 	}
 
@@ -157,6 +160,7 @@ func (wi *WGInstanceConfig) findClientBYIPCIDR(IPCIDR string) (*WGClient, error)
 			return wc, nil
 		}
 	}
+	log.Println("Client Not Found")
 	return nil, errors.New("Client Not Found")
 }
 
@@ -182,22 +186,27 @@ func (wi *WGInstanceConfig) allocateClient(ClientUUID string, instancePath strin
 		}
 	}
 	if !foundAvailable {
-		return nil, fmt.Errorf("No Free IPs Available in instance: %s", wi.InstanceNameReadOnly)
+		errortxt := fmt.Sprintf("No Free IPs Available in instance: %s", wi.InstanceNameReadOnly)
+		log.Println(errortxt)
+		return nil, errors.New(errortxt)
 	}
 	instanceFileName := fmt.Sprintf("%s.json", wi.InstanceNameReadOnly)
 	finalFileNameAndPath := path.Join(instancePath, instanceFileName)
 	err := wi.save(finalFileNameAndPath)
 	if err != nil {
+		log.Println(err)
 		return nil, err
 	}
 	err = wi.deploy(wgconfigPath)
 	if err != nil {
+		log.Println(err)
 		return nil, err
 	}
 
 	return allocatedWC, nil
 }
 func (wi *WGInstanceConfig) revokeClientByUUID(ClientUUID string, instancePath string, wgconfigPath string) error {
+	isFound := false
 	for _, wc := range wi.WGClients {
 		if wc.ClientUUID == ClientUUID {
 			wc.ClientUUID = ""
@@ -205,22 +214,31 @@ func (wi *WGInstanceConfig) revokeClientByUUID(ClientUUID string, instancePath s
 			//we  have to change the keys
 			pkey, err := newPrivateKey()
 			if err != nil {
+				log.Println(err)
 				return err
 			}
 			wc.ClientPubKey = pkey.Public().String()
 			wc.ClientPriKey = pkey.String()
 			wc.RevokedTimestamp = time.Now().Format(utils.MyTimeFormatWithoutTimeZone)
+			isFound = true
 			break
 		}
+	}
+	if !isFound {
+		txt := fmt.Sprintf("Revoke: Client %s Not Found in WG Instance: %s\n", ClientUUID, wi.InstanceNameReadOnly)
+		log.Print(txt)
+		return errors.New(txt)
 	}
 	instanceFileName := fmt.Sprintf("%s.json", wi.InstanceNameReadOnly)
 	finalFileNameAndPath := path.Join(instancePath, instanceFileName)
 	err := wi.save(finalFileNameAndPath)
 	if err != nil {
+		log.Println(err)
 		return err
 	}
 	err = wi.deploy(wgconfigPath)
 	if err != nil {
+		log.Println(err)
 		return err
 	}
 	return nil
@@ -234,6 +252,7 @@ func (wi *WGInstanceConfig) revokeClientByIPCIDR(IPCIDR string) error {
 			//we  have to change the keys
 			pkey, err := newPrivateKey()
 			if err != nil {
+				log.Println(err)
 				return err
 			}
 			wc.ClientPubKey = pkey.Public().String()

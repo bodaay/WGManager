@@ -1,0 +1,623 @@
+{
+	"info": {
+		"_postman_id": "997fbcf4-ed0b-43d2-b309-ae1b97f0c8e2",
+		"name": "WGManager",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "ADMIN",
+			"item": [
+				{
+					"name": "GetAllInstance",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://192.168.250.11:1129/api/instance",
+							"protocol": "http",
+							"host": [
+								"192",
+								"168",
+								"250",
+								"11"
+							],
+							"port": "1129",
+							"path": [
+								"api",
+								"instance"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "AddInstance-Wg01",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"IP\":\"172.27.32.0/22\",\r\n    \"Port\":22232,\r\n    \"EndpointHost\":\"78.100.150.223:22232\",\r\n    \"DNS\":[\"192.168.202.11\",\"1.1.1.1\"],\r\n    \"UseNAT\":false,\r\n    \"EthernetName\":\"eno1\",\r\n    \"MaxClient\":0\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://192.168.250.11:1129/api/instance",
+							"protocol": "http",
+							"host": [
+								"192",
+								"168",
+								"250",
+								"11"
+							],
+							"port": "1129",
+							"path": [
+								"api",
+								"instance"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "AddInstance-Wg02",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"IP\":\"172.27.36.0/22\",\r\n    \"Port\":22236,\r\n    \"EndpointHost\":\"78.100.150.223:22236\",\r\n    \"DNS\":[\"192.168.202.11\",\"1.1.1.1\"],\r\n    \"UseNAT\":false,\r\n    \"EthernetName\":\"eno1\",\r\n    \"MaxClient\":0\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://192.168.250.11:1129/api/instance",
+							"protocol": "http",
+							"host": [
+								"192",
+								"168",
+								"250",
+								"11"
+							],
+							"port": "1129",
+							"path": [
+								"api",
+								"instance"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "AddInstance-Wg03",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"IP\":\"172.27.40.0/22\",\r\n    \"Port\":22240,\r\n    \"EndpointHost\":\"78.100.150.223:22240\",\r\n    \"DNS\":[\"192.168.202.11\",\"1.1.1.1\"],\r\n    \"UseNAT\":false,\r\n    \"EthernetName\":\"eno1\",\r\n    \"MaxClient\":0\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://192.168.250.11:1129/api/instance",
+							"protocol": "http",
+							"host": [
+								"192",
+								"168",
+								"250",
+								"11"
+							],
+							"port": "1129",
+							"path": [
+								"api",
+								"instance"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "AddInstance-Wg04",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"IP\":\"172.27.44.0/22\",\r\n    \"Port\":22244,\r\n    \"EndpointHost\":\"78.100.150.223:22244\",\r\n    \"DNS\":[\"192.168.202.11\",\"1.1.1.1\"],\r\n    \"UseNAT\":false,\r\n    \"EthernetName\":\"eno1\",\r\n    \"MaxClient\":0\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://192.168.250.11:1129/api/instance",
+							"protocol": "http",
+							"host": [
+								"192",
+								"168",
+								"250",
+								"11"
+							],
+							"port": "1129",
+							"path": [
+								"api",
+								"instance"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "AddInstance-Wg05",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"IP\":\"172.27.48.0/22\",\r\n    \"Port\":22248,\r\n    \"EndpointHost\":\"78.100.150.223:22248\",\r\n    \"DNS\":[\"192.168.202.11\",\"1.1.1.1\"],\r\n    \"UseNAT\":false,\r\n    \"EthernetName\":\"eno1\",\r\n    \"MaxClient\":0\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://192.168.250.11:1129/api/instance",
+							"protocol": "http",
+							"host": [
+								"192",
+								"168",
+								"250",
+								"11"
+							],
+							"port": "1129",
+							"path": [
+								"api",
+								"instance"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "AddInstance-Wg06",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"IP\":\"172.27.52.0/22\",\r\n    \"Port\":22252,\r\n    \"EndpointHost\":\"78.100.150.223:22252\",\r\n    \"DNS\":[\"192.168.202.11\",\"1.1.1.1\"],\r\n    \"UseNAT\":false,\r\n    \"EthernetName\":\"eno1\",\r\n    \"MaxClient\":0\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://192.168.250.11:1129/api/instance",
+							"protocol": "http",
+							"host": [
+								"192",
+								"168",
+								"250",
+								"11"
+							],
+							"port": "1129",
+							"path": [
+								"api",
+								"instance"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "AddInstance-Wg07",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"IP\":\"172.27.56.0/22\",\r\n    \"Port\":22256,\r\n    \"EndpointHost\":\"78.100.150.223:22256\",\r\n    \"DNS\":[\"192.168.202.11\",\"1.1.1.1\"],\r\n    \"UseNAT\":false,\r\n    \"EthernetName\":\"eno1\",\r\n    \"MaxClient\":0\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://192.168.250.11:1129/api/instance",
+							"protocol": "http",
+							"host": [
+								"192",
+								"168",
+								"250",
+								"11"
+							],
+							"port": "1129",
+							"path": [
+								"api",
+								"instance"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "AddInstance-Wg08",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"IP\":\"172.27.60.0/22\",\r\n    \"Port\":22260,\r\n    \"EndpointHost\":\"78.100.150.223:22260\",\r\n    \"DNS\":[\"192.168.202.11\",\"1.1.1.1\"],\r\n    \"UseNAT\":false,\r\n    \"EthernetName\":\"eno1\",\r\n    \"MaxClient\":0\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://192.168.250.11:1129/api/instance",
+							"protocol": "http",
+							"host": [
+								"192",
+								"168",
+								"250",
+								"11"
+							],
+							"port": "1129",
+							"path": [
+								"api",
+								"instance"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "AddInstance-Wg09",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"IP\":\"172.27.64.0/22\",\r\n    \"Port\":22264,\r\n    \"EndpointHost\":\"78.100.150.223:22264\",\r\n    \"DNS\":[\"192.168.202.11\",\"1.1.1.1\"],\r\n    \"UseNAT\":false,\r\n    \"EthernetName\":\"eno1\",\r\n    \"MaxClient\":0\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://192.168.250.11:1129/api/instance",
+							"protocol": "http",
+							"host": [
+								"192",
+								"168",
+								"250",
+								"11"
+							],
+							"port": "1129",
+							"path": [
+								"api",
+								"instance"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "AddInstance-Wg10",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"IP\":\"172.27.68.0/22\",\r\n    \"Port\":22268,\r\n    \"EndpointHost\":\"78.100.150.223:22268\",\r\n    \"DNS\":[\"192.168.202.11\",\"1.1.1.1\"],\r\n    \"UseNAT\":false,\r\n    \"EthernetName\":\"eno1\",\r\n    \"MaxClient\":0\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://192.168.250.11:1129/api/instance",
+							"protocol": "http",
+							"host": [
+								"192",
+								"168",
+								"250",
+								"11"
+							],
+							"port": "1129",
+							"path": [
+								"api",
+								"instance"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "RemoveInstance",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\":\"wg10\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://192.168.250.11:1129/api/instance",
+							"protocol": "http",
+							"host": [
+								"192",
+								"168",
+								"250",
+								"11"
+							],
+							"port": "1129",
+							"path": [
+								"api",
+								"instance"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "DeployInstance",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\":\"wg01\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://192.168.250.11:1129/api/instance",
+							"protocol": "http",
+							"host": [
+								"192",
+								"168",
+								"250",
+								"11"
+							],
+							"port": "1129",
+							"path": [
+								"api",
+								"instance"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "CLIENT",
+			"item": [
+				{
+					"name": "AllocateClient",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"Instancename\":\"wg01\",\r\n    \"Clientuuid\":\"client1\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://192.168.250.11:6969/api/client",
+							"protocol": "http",
+							"host": [
+								"192",
+								"168",
+								"250",
+								"11"
+							],
+							"port": "6969",
+							"path": [
+								"api",
+								"client"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get WG Manager Version",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"Instancename\":\"wg01\",\r\n    \"Clientuuid\":\"client1\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://192.168.250.11:6969/api/client",
+							"protocol": "http",
+							"host": [
+								"192",
+								"168",
+								"250",
+								"11"
+							],
+							"port": "6969",
+							"path": [
+								"api",
+								"client"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "RevokeClient",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"Instancename\":\"wg02\",\r\n    \"Clientuuid\":\"00008020-001A5D1E21E20020EB\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://192.168.250.11:6969/api/client",
+							"protocol": "http",
+							"host": [
+								"192",
+								"168",
+								"250",
+								"11"
+							],
+							"port": "6969",
+							"path": [
+								"api",
+								"client"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Airwatch Events Listener",
+			"item": [
+				{
+					"name": "Airwatch Events",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"Instancename\":\"wg01\",\r\n    \"Clientuuid\":\"client1\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://192.168.250.11:9696/events",
+							"protocol": "http",
+							"host": [
+								"192",
+								"168",
+								"250",
+								"11"
+							],
+							"port": "9696",
+							"path": [
+								"events"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Mimic Delete Events",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"EventId\":662,\"EventType\":\"Delete Device Requested\",\"DeviceId\":821,\"AssetNumber\":\"a1459cddd15acbdcff4708deb65192b2845b8aba\"}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://192.168.250.11:9696/events",
+							"protocol": "http",
+							"host": [
+								"192",
+								"168",
+								"250",
+								"11"
+							],
+							"port": "9696",
+							"path": [
+								"events"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Mimic Add Events",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"EventId\":642,\"EventType\":\"MDM Enrollment Complete\",\"DeviceId\":81,\"AssetNumber\":\"00008020-001A5D1E21E20020EB\",\"OrganizationGroupName\":\"work2\"}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://192.168.250.11:9696/events",
+							"protocol": "http",
+							"host": [
+								"192",
+								"168",
+								"250",
+								"11"
+							],
+							"port": "9696",
+							"path": [
+								"events"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

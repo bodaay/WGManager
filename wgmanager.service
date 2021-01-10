@@ -1,0 +1,21 @@
+[Unit]
+	Description= Document Managment GO  servicing for web
+	
+	[Service]
+	WorkingDirectory=/home/sysadmin/wgmanager
+	ExecStart=/home/sysadmin/wgmanager/WgManager
+	RestartSec=always
+	# Auto restart in 3 Seconds
+	Restart=3
+	# Time to wait for process to exit before sending kill signal
+	TimeoutStopSec=10
+	KillSignal=SIGINT
+	SyslogIdentifier=wgmanager.service-Log
+	# This is how I created this user: sudo adduser --no-create-home --disabled-login --shell /bin/false dotnet
+	User=root
+	# add as many Env vairbales required here
+	#Environment=GO_ENVIRONMENT=Production
+	
+	[Install]
+	WantedBy=multi-user.target
+	

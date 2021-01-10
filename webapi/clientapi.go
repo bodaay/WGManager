@@ -183,6 +183,7 @@ func postRevokeClientAll(e *echo.Echo, wgConfig *wg.WGConfig) {
 			return c.String(http.StatusBadRequest, err.Error())
 		}
 		for _, insta := range wgConfig.WGInstances {
+			//we don't care about errors, because client not found is an error by itself
 			wgConfig.RevokeClient(insta.InstanceNameReadOnly, u.Clientuuid)
 
 		}
