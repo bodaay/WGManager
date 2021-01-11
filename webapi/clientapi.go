@@ -84,6 +84,10 @@ func configureAllRoutesClient(e *echo.Echo, wgConfig *wg.WGConfig, softwareVersi
  */
 func getServerStatus(e *echo.Echo, wgConfig *wg.WGConfig, softwareVersion string) {
 	e.GET("/api/client", func(c echo.Context) error {
+		IsAllowed := checkIPAccess(c.RealIP(), wgConfig.APIAllowedIPSCIDR)
+		if !IsAllowed {
+			return c.String(http.StatusUnauthorized, fmt.Sprintf("You are not allowed to access, ip: %s", c.RealIP()))
+		}
 		return c.String(http.StatusOK, fmt.Sprintf("WGManager API status: OK, Version: %s", softwareVersion))
 	})
 }
